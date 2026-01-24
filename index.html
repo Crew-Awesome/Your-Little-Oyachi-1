@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <!-- Preload DePixel font for faster rendering of UI text -->
+  <link rel="preload" href="assets/fonts/DePixel/1144faa6fb5f8b45e79d4d87a8c27e92.woff2" as="font" type="font/woff2" crossorigin>
+    <title>Your Little Oyachi</title>
+    <meta name="theme-color" content="#f7d6df" />
+    <link rel="canonical" href="https://oyachigame.nichesite.org/" />
+    <meta
+      name="description"
+      content="A cozy little pet game where you hang out with Oyachi, give gentle pats, and watch her adorable reactions."
+    />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Your Little Oyachi" />
+    <meta property="og:title" content="Your Little Oyachi" />
+    <meta
+      property="og:description"
+      content="A cozy little pet game where you hang out with Oyachi, give gentle pats, and watch her adorable reactions."
+    />
+    <meta property="og:url" content="https://oyachigame.nichesite.org/" />
+    <meta
+      property="og:image"
+      content="https://oyachigame.nichesite.org/assets/images/site/coverart.png"
+    />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Your Little Oyachi" />
+    <meta
+      name="twitter:description"
+      content="A cozy little pet game where you hang out with Oyachi, give gentle pats, and watch her adorable reactions."
+    />
+    <meta
+      name="twitter:image"
+      content="https://oyachigame.nichesite.org/assets/images/site/coverart.png"
+    />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <main class="game-root">
+      <img src="assets/images/site/logo.png" alt="Oyachi" class="logo" />
+      <nav class="site-nav" aria-label="Site">
+        <span class="active" aria-current="page">Home</span>
+        <a href="about.html">About</a>
+      </nav>
+      <div id="game" aria-live="polite"></div>
+      <a class="open-game-link" href="game.html" target="_blank" rel="noopener">
+        Open game in new tab
+      </a>
+    </main>
+    <script src="https://cdn.jsdelivr.net/npm/pixi.js@7.3.2/dist/pixi.min.js"></script>
+    <script type="module" src="src/game/index.js?v=2026-01-20"></script>
+  </body>
+</html>

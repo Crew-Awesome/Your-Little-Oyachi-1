@@ -1,0 +1,23 @@
+# OS generated files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Editor-specific files
+*.sublime-*
+
+# Local tools/config (if any)
+tools/*.local.*
+tools/*.bak
+
+# Temporary files
+*.tmp
+*.temp
+~*
