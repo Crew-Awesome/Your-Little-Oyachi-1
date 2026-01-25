@@ -1,0 +1,50 @@
+name: Deploy via FTP
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Validate FTP config
+        env:
+          FTP_HOST: ftpupload.net
+          FTP_USERNAME: b15_40908595
+          FTP_PASSWORD: losleones2018
+          FTP_TARGET_DIR: oyachigame.nichesite.org/htdocs/
+        run: |
+          set -e
+          for var in FTP_HOST FTP_USERNAME FTP_PASSWORD FTP_TARGET_DIR; do
+            if [ -z "${!var}" ]; then
+              echo "Missing required value: $var"
+              exit 1
+            fi
+          done
+          echo "All FTP values present."
+
+      - name: Deploy
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+        with:
+          server: ftpupload.net
+          username: b15_40908595
+          password: losleones2018
+          server-dir: oyachigame.nichesite.org/htdocs/
+          protocol: ftp
+          dangerous-clean-slate: false
+          exclude: |
+            **/.git/**
+            **/.git*
+            **/.github/**
+            **/node_modules/**
+            **/.env*
+            **/.DS_Store
+            **/Thumbs.db

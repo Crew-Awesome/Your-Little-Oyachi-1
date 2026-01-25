@@ -1,0 +1,175 @@
+:root {
+  color-scheme: light;
+  font-family: "Comic Sans MS", "Baloo 2", "Trebuchet MS", sans-serif;
+  --viewport-height: 100vh;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: var(--viewport-height);
+  background: #f4f4f4;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.game-root {
+  width: min(1280px, 100vw);
+  height: min(900px, var(--viewport-height));
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  padding: 24px 12px;
+  align-items: center;
+}
+
+.logo {
+  width: min(160px, 60vw);
+  height: auto;
+  object-fit: contain;
+  position: relative;
+  z-index: 1;
+}
+
+.site-nav {
+  display: flex;
+  gap: 16px;
+  font-size: 14px;
+  color: #333;
+  align-items: center;
+  justify-content: center;
+}
+
+.site-nav a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.site-nav .active {
+  color: #111;
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+#game {
+  position: relative;
+  z-index: 1;
+  width: min(1280px, 100%);
+  flex: 1;
+  min-height: 0;
+  touch-action: none;
+  overflow: hidden;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+}
+
+#game canvas {
+  position: absolute;
+  left: 0;
+  top: 0;
+  display: block;
+  touch-action: none;
+  z-index: 0;
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+}
+
+.open-game-link {
+  border: 1px solid #d4d4d4;
+  background: #ffffff;
+  color: #333;
+  font-size: 14px;
+  padding: 8px 14px;
+  border-radius: 8px;
+  text-decoration: none;
+}
+
+.about-content {
+  max-width: min(520px, 90%);
+  font-size: 16px;
+  line-height: 1.6;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.about-link {
+  align-self: center;
+  border: 1px solid #d4d4d4;
+  background: #ffffff;
+  color: #333;
+  font-size: 14px;
+  padding: 8px 16px;
+  border-radius: 8px;
+  text-decoration: none;
+}
+
+body.game-only {
+  width: 100%;
+  height: var(--viewport-height);
+  display: block;
+}
+
+body.game-only #game {
+  width: 100vw;
+  height: var(--viewport-height);
+  flex: none;
+}
+
+body.game-only #game canvas {
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  transform-origin: center;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  border: 0;
+  white-space: nowrap;
+}
+/* DePixel font (DePixel family) */
+@font-face {
+  font-family: 'DePixel';
+  src: url('/assets/fonts/DePixel/1144faa6fb5f8b45e79d4d87a8c27e92.woff2') format('woff2'),
+       url('/assets/fonts/DePixel/1144faa6fb5f8b45e79d4d87a8c27e92.woff') format('woff'),
+       url('/assets/fonts/DePixel/1144faa6fb5f8b45e79d4d87a8c27e92.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+/* Fallback for very old browsers (optional legacy formats) */
+@font-face {
+  font-family: 'DePixel';
+  src: url('/assets/fonts/DePixel/1144faa6fb5f8b45e79d4d87a8c27e92.eot');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+  /* IE9 compatibility also allows this format to be loaded via font-face syntax below */
+}
+
+/* Global defaults: prefer DePixel, with sensible fallbacks */
+html, body {
+  /* Use DePixel as the primary UI font */
+  font-family: 'DePixel', 'Tiny5', Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
