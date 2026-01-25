@@ -16,6 +16,7 @@ import { getLayoutBounds, registerLayoutSubscriber } from "../core/layout.js";
 import { audioSystem } from "../systems/audio-system.js";
 import { clamp, easeInCubic, easeOutCubic } from "../utils/math.js";
 import { getPointerId } from "../utils/pointer.js";
+import { createPixelText } from "../utils/text.js";
 import { getSafeDimension, getTextureDimension } from "../utils/texture.js";
 
 const safeLayoutCall = (handler, layout) => {
@@ -199,8 +200,7 @@ const initGame = ({ textures, gameRoot }) => {
   uiLayer.zIndex = 40;
   stage.addChild(uiLayer);
 
-  const nowPlayingText = new PIXI.Text("", {
-    fontFamily: "DePixel",
+  const nowPlayingText = createPixelText("", {
     fontSize: 12,
     fill: 0x111111,
     align: "left",
@@ -222,8 +222,7 @@ const initGame = ({ textures, gameRoot }) => {
   hintOverlay.visible = false;
   hintOverlay.eventMode = "passive";
   const hintBackground = new PIXI.Graphics();
-  const hintText = new PIXI.Text("", {
-    fontFamily: "DePixel",
+  const hintText = createPixelText("", {
     fontSize: 12,
     fill: 0x111111,
     align: "center",
@@ -246,8 +245,7 @@ const initGame = ({ textures, gameRoot }) => {
   hintConfirm.visible = false;
   hintConfirm.eventMode = "passive";
   const hintConfirmBg = new PIXI.Graphics();
-  const hintConfirmText = new PIXI.Text("Hide hints?", {
-    fontFamily: "DePixel",
+  const hintConfirmText = createPixelText("Hide hints?", {
     fontSize: 12,
     fill: 0x111111,
     align: "center",
@@ -259,8 +257,7 @@ const initGame = ({ textures, gameRoot }) => {
     container.eventMode = "static";
     container.cursor = "pointer";
     const bg = new PIXI.Graphics();
-    const text = new PIXI.Text(label, {
-      fontFamily: "DePixel",
+    const text = createPixelText(label, {
       fontSize: 11,
       fill: 0x111111,
       align: "center",
@@ -623,8 +620,7 @@ const initGame = ({ textures, gameRoot }) => {
     container.eventMode = "static";
     container.hitArea = new PIXI.Rectangle(0, 0, sliderConfig.hitWidth, sliderConfig.hitHeight);
 
-    const labelText = new PIXI.Text(label, {
-      fontFamily: "DePixel",
+    const labelText = createPixelText(label, {
       fontSize: sliderConfig.labelFontSize,
       fill: 0x111111,
     });
@@ -765,8 +761,7 @@ const initGame = ({ textures, gameRoot }) => {
     container.eventMode = "static";
     container.hitArea = new PIXI.Rectangle(0, 0, sliderConfig.hitWidth, sliderConfig.hitHeight);
 
-    const labelText = new PIXI.Text(label, {
-      fontFamily: "DePixel",
+    const labelText = createPixelText(label, {
       fontSize: sliderConfig.labelFontSize,
       fill: 0x111111,
     });
@@ -923,8 +918,7 @@ const initGame = ({ textures, gameRoot }) => {
   const ballOptionIcon = new PIXI.Sprite(textures.ball);
   ballOptionIcon.anchor.set(0.5);
   ballOptionIcon.roundPixels = true;
-  const ballOptionLabel = new PIXI.Text("Ball", {
-    fontFamily: "DePixel",
+  const ballOptionLabel = createPixelText("Ball", {
     fontSize: 12,
     fill: 0x111111,
   });
@@ -940,8 +934,7 @@ const initGame = ({ textures, gameRoot }) => {
   noToyOptionIcon.anchor.set(0.5);
   noToyOptionIcon.roundPixels = true;
   noToyOptionIcon.alpha = 0.35;
-  const noToyOptionLabel = new PIXI.Text("No toy", {
-    fontFamily: "DePixel",
+  const noToyOptionLabel = createPixelText("No toy", {
     fontSize: 12,
     fill: 0x111111,
   });
@@ -1358,8 +1351,7 @@ const initGame = ({ textures, gameRoot }) => {
   closetSlotCheck.alpha = 0.75;
   closetGrid.addChild(closetSlotCheck);
 
-  const closetSlotLabel = new PIXI.Text("Default", {
-    fontFamily: "DePixel",
+  const closetSlotLabel = createPixelText("Default", {
     fontSize: 12,
     fill: 0x111111,
   });

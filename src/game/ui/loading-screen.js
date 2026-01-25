@@ -2,6 +2,7 @@ import { GAME_H, GAME_W } from "../config/constants.js";
 import { getLayoutBounds, registerLayoutSubscriber } from "../core/layout.js";
 import { getApp } from "../core/app.js";
 import { clamp } from "../utils/math.js";
+import { createPixelText } from "../utils/text.js";
 
 export const createLoadingScreen = () => {
   const app = getApp();
@@ -18,8 +19,7 @@ export const createLoadingScreen = () => {
   shade.endFill();
   container.addChild(shade);
 
-  const loadingText = new PIXI.Text("Loading.", {
-    fontFamily: "DePixel",
+  const loadingText = createPixelText("Loading.", {
     fontSize: 14,
     fill: 0x111111,
   });
@@ -33,16 +33,14 @@ export const createLoadingScreen = () => {
     "Almost ready",
   ];
   let secondaryIndex = 0;
-  const secondaryText = new PIXI.Text(secondaryMessages[secondaryIndex], {
-    fontFamily: "DePixel",
+  const secondaryText = createPixelText(secondaryMessages[secondaryIndex], {
     fontSize: 11,
     fill: 0x4a4a4a,
   });
   secondaryText.anchor.set(0.5);
   container.addChild(secondaryText);
 
-  const detailText = new PIXI.Text("", {
-    fontFamily: "DePixel",
+  const detailText = createPixelText("", {
     fontSize: 10,
     fill: 0x6a6a6a,
   });
@@ -65,8 +63,7 @@ export const createLoadingScreen = () => {
   const barFill = new PIXI.Graphics();
   container.addChild(barFill);
 
-  const skipText = new PIXI.Text("Skip", {
-    fontFamily: "DePixel",
+  const skipText = createPixelText("Skip", {
     fontSize: 11,
     fill: 0x111111,
   });
