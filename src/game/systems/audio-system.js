@@ -16,6 +16,7 @@ const createAudioSystem = () => {
       "assets/audio/sfx/pet_fast_1.wav",
       "assets/audio/sfx/pet_fast_2.wav",
     ],
+    happyJump: ["assets/audio/sfx/pet_oh_soft.wav"],
     petHoldMagic: ["assets/audio/sfx/pet_hold_magic_loop.wav"],
     petOh: ["assets/audio/sfx/pet_oh_soft.wav"],
     sneeze: ["assets/audio/sfx/sneeze.wav"],

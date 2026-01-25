@@ -24,6 +24,45 @@ const bootstrap = async () => {
   registerAppListener(app, window, "resize", applyLayoutMode);
   registerAppListener(app, window, "orientationchange", applyLayoutMode);
   registerAppListener(app, document, "fullscreenchange", applyLayoutMode);
+  let backgroundTickHandle = null;
+  const startBackgroundTick = () => {
+    if (backgroundTickHandle) {
+      return;
+    }
+    app.ticker.stop();
+    backgroundTickHandle = window.setInterval(() => {
+      if (document.visibilityState !== "hidden") {
+        return;
+      }
+      app.ticker.update(performance.now());
+    }, 1000 / 12);
+  };
+  const stopBackgroundTick = () => {
+    if (backgroundTickHandle) {
+      clearInterval(backgroundTickHandle);
+      backgroundTickHandle = null;
+    }
+    if (!app.ticker.started) {
+      app.ticker.start();
+    }
+  };
+  const syncVisibilityTick = () => {
+    if (document.visibilityState === "hidden") {
+      startBackgroundTick();
+    } else {
+      stopBackgroundTick();
+    }
+  };
+  registerAppListener(app, document, "visibilitychange", syncVisibilityTick);
+  syncVisibilityTick();
+  if (Array.isArray(app.__oyachiCleanup)) {
+    app.__oyachiCleanup.push(() => {
+      if (backgroundTickHandle) {
+        clearInterval(backgroundTickHandle);
+        backgroundTickHandle = null;
+      }
+    });
+  }
   if (window.visualViewport) {
     registerAppListener(app, window.visualViewport, "resize", applyLayoutMode);
     registerAppListener(app, window.visualViewport, "scroll", applyLayoutMode);

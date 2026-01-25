@@ -1427,6 +1427,7 @@ const initGame = ({ textures, gameRoot }) => {
   let nextHeartAllowedAt = 0;
   let lastPetAt = 0;
   let lastSpamPetAt = 0;
+  let lastHappyJumpAt = 0;
   let petSpamCount = 0;
   let petHoldActive = false;
   let holdLoopStarted = false;
@@ -1436,8 +1437,17 @@ const initGame = ({ textures, gameRoot }) => {
     phase: Math.random() * Math.PI * 2,
     offset: 0,
   };
+  const idleSwayState = {
+    phase: Math.random() * Math.PI * 2,
+    offsetX: 0,
+    rotation: 0,
+  };
   const jumpMicroState = {
     phase: Math.random() * Math.PI * 2,
+    offset: 0,
+    squash: 0,
+  };
+  const bopState = {
     offset: 0,
     squash: 0,
   };
@@ -2006,7 +2016,15 @@ const initGame = ({ textures, gameRoot }) => {
     if (petSpamCount >= petSpamTiming.requiredCount) {
       petSpamCount = 0;
       enqueueHint("spam", { priority: true });
-      startHappyJumpSequence();
+      if (now - lastHappyJumpAt >= 3200 && state.current !== "happy_jump_sequence") {
+        lastHappyJumpAt = now;
+        startHappyJumpSequence();
+        void audioSystem.playSfx({
+          id: "happyJump",
+          cooldownMs: 2400,
+          allowPitch: false,
+        });
+      }
     }
   };
 
@@ -2917,6 +2935,17 @@ const initGame = ({ textures, gameRoot }) => {
       : 0;
     idleBobState.offset += (bobTarget - idleBobState.offset) * idleBobTiming.ease;
 
+    const swayActive = bobActive;
+    if (swayActive) {
+      idleSwayState.phase += ((Math.PI * 2) / 7.5) * deltaSeconds;
+    }
+    const swayTargetX = swayActive ? Math.sin(idleSwayState.phase) * 2.2 : 0;
+    const swayTargetRotation = swayActive
+      ? Math.sin(idleSwayState.phase + Math.PI / 2) * 0.025
+      : 0;
+    idleSwayState.offsetX += (swayTargetX - idleSwayState.offsetX) * 0.08;
+    idleSwayState.rotation += (swayTargetRotation - idleSwayState.rotation) * 0.08;
+
     const jumpMicroActive = state.current === "happy_jump_sequence";
     if (jumpMicroActive) {
       jumpMicroState.phase += ((Math.PI * 2) / jumpMicroTiming.period) * deltaSeconds;
@@ -2931,8 +2960,24 @@ const initGame = ({ textures, gameRoot }) => {
       (jumpOffsetTarget - jumpMicroState.offset) * jumpMicroTiming.ease;
     jumpMicroState.squash +=
       (jumpSquashTarget - jumpMicroState.squash) * jumpMicroTiming.ease;
-    oyachiVisual.y = idleBobState.offset + jumpMicroState.offset;
-    oyachiVisual.scale.set(1 + jumpMicroState.squash, 1 - jumpMicroState.squash);
+
+    const bopActive =
+      state.current === "move" ||
+      state.current === "wake" ||
+      state.current === "happy_jump_sequence";
+    const bopStrength = bopActive ? clamp(Math.abs(hopHeight) / 16, 0, 1) : 0;
+    const bopOffsetTarget = -bopStrength * 2;
+    const bopSquashTarget = bopStrength * 0.03;
+    bopState.offset += (bopOffsetTarget - bopState.offset) * 0.18;
+    bopState.squash += (bopSquashTarget - bopState.squash) * 0.18;
+
+    const visualOffsetY = idleBobState.offset + jumpMicroState.offset + bopState.offset;
+    const visualScaleX = 1 + jumpMicroState.squash + bopState.squash;
+    const visualScaleY = 1 - jumpMicroState.squash - bopState.squash;
+    oyachiVisual.x = idleSwayState.offsetX;
+    oyachiVisual.y = visualOffsetY;
+    oyachiVisual.rotation = idleSwayState.rotation;
+    oyachiVisual.scale.set(visualScaleX, visualScaleY);
 
 
     let scaleX = depthScale;
