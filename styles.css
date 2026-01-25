@@ -166,10 +166,15 @@ body.game-only #game canvas {
   /* IE9 compatibility also allows this format to be loaded via font-face syntax below */
 }
 
-/* Global defaults: prefer DePixel, with sensible fallbacks */
+/* Global defaults: keep site in Comic Sans */
 html, body {
-  /* Use DePixel as the primary UI font */
-  font-family: 'DePixel', 'Tiny5', Arial, sans-serif;
+  font-family: "Comic Sans MS", "Comic Sans", "Baloo 2", "Trebuchet MS", sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+
+/* Pixel font only for the game container/canvas */
+#game,
+#game canvas {
+  font-family: "DePixel", "Tiny5", monospace;
 }
