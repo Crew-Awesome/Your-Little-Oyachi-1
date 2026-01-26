@@ -213,56 +213,27 @@ const initGame = ({ textures, gameRoot }) => {
   hintOverlay.alpha = 0;
   hintOverlay.visible = false;
   hintOverlay.eventMode = "passive";
+  hintOverlay.roundPixels = true;
   const hintBackground = new PIXI.Graphics();
   const hintText = createPixelText("", {
     fontSize: 12,
     fill: 0x111111,
-    align: "center",
+    align: "left",
   });
-  hintText.anchor.set(0.5);
+  hintText.anchor.set(0, 0.5);
   hintText.roundPixels = true;
   hintText.eventMode = "none";
 
   const hintClose = new PIXI.Container();
   hintClose.eventMode = "static";
   hintClose.cursor = "pointer";
+  hintClose.roundPixels = true;
   const hintCloseBg = new PIXI.Graphics();
   const hintCloseIcon = new PIXI.Graphics();
   hintClose.addChild(hintCloseBg, hintCloseIcon);
 
   hintOverlay.addChild(hintBackground, hintText, hintClose);
   uiLayer.addChild(hintOverlay);
-
-  const hintConfirm = new PIXI.Container();
-  hintConfirm.visible = false;
-  hintConfirm.eventMode = "passive";
-  const hintConfirmBg = new PIXI.Graphics();
-  const hintConfirmText = createPixelText("Hide hints?", {
-    fontSize: 12,
-    fill: 0x111111,
-    align: "center",
-  });
-  hintConfirmText.anchor.set(0.5);
-
-  const createConfirmButton = (label) => {
-    const container = new PIXI.Container();
-    container.eventMode = "static";
-    container.cursor = "pointer";
-    const bg = new PIXI.Graphics();
-    const text = createPixelText(label, {
-      fontSize: 11,
-      fill: 0x111111,
-      align: "center",
-    });
-    text.anchor.set(0.5);
-    container.addChild(bg, text);
-    return { container, bg, text };
-  };
-
-  const hintConfirmYes = createConfirmButton("Yes");
-  const hintConfirmNo = createConfirmButton("No");
-  hintConfirm.addChild(hintConfirmBg, hintConfirmText, hintConfirmYes.container, hintConfirmNo.container);
-  uiLayer.addChild(hintConfirm);
 
   const nowPlayingState = {
     phase: "hidden",
@@ -274,13 +245,12 @@ const initGame = ({ textures, gameRoot }) => {
     fadeOut: 0.6,
   };
   const hintTiming = {
-    fadeIn: 0.5,
+    fadeIn: 0.2,
     hold: 2.4,
-    fadeOut: 0.6,
-    gapMin: 3.5,
-    gapMax: 6.5,
+    fadeOut: 0.3,
+    gap: 1.4,
   };
-  const hintAlpha = 0.85;
+  const hintAlpha = 1;
 
   const showNowPlaying = (title) => {
     nowPlayingText.text = `Now playing: ${title}`;
@@ -297,6 +267,7 @@ const initGame = ({ textures, gameRoot }) => {
     costumes: { text: "Tap costumes to dress Oyachi", cooldownMs: 30000, chance: 0.6 },
     fullscreen: { text: "Tap fullscreen for a bigger view", cooldownMs: 32000, chance: 0.55 },
     settings: { text: "Settings are in the corner", cooldownMs: 32000, chance: 0.55 },
+    test: { text: "Hint test: Oyachi is listening.", cooldownMs: 0, chance: 1 },
   };
 
   const hintState = {
@@ -305,7 +276,7 @@ const initGame = ({ textures, gameRoot }) => {
     queue: [],
     lastShown: new Map(),
     nextAllowedAt: 0,
-    pendingDelayUntil: 0,
+    activeId: null,
   };
   let hintToggleRow = null;
 
@@ -324,15 +295,15 @@ const initGame = ({ textures, gameRoot }) => {
       hintState.phase = "hidden";
       hintState.timer = 0;
       hintState.queue = [];
+      hintState.activeId = null;
       hintOverlay.alpha = 0;
       hintOverlay.visible = false;
-      hintConfirm.visible = false;
     } else {
-      hintOverlay.visible = true;
+      hintOverlay.visible = false;
       hintState.phase = "hidden";
       hintState.timer = 0;
-      hintState.pendingDelayUntil = performance.now() + 300;
-      hintState.nextAllowedAt = performance.now() + 600;
+      hintState.activeId = null;
+      hintState.nextAllowedAt = performance.now() + 400;
     }
   };
 
@@ -344,35 +315,7 @@ const initGame = ({ textures, gameRoot }) => {
     localStorage.setItem(hintStorageKeys.seen, "true");
   };
 
-  const scheduleHintGap = (now) => {
-    hintState.nextAllowedAt =
-      now + (hintTiming.gapMin + Math.random() * (hintTiming.gapMax - hintTiming.gapMin)) * 1000;
-  };
-
-  const enqueueHint = (id, { priority = false, delayMs = 0 } = {}) => {
-    if (!hintsEnabled) {
-      return;
-    }
-    if (!hintConfig[id]) {
-      return;
-    }
-    if (hintState.queue.includes(id)) {
-      return;
-    }
-    if (priority) {
-      hintState.queue.unshift(id);
-    } else {
-      hintState.queue.push(id);
-    }
-    if (delayMs > 0) {
-      hintState.pendingDelayUntil = Math.max(
-        hintState.pendingDelayUntil,
-        performance.now() + delayMs,
-      );
-    }
-  };
-
-  const tryShowHint = (id, { force = false } = {}) => {
+  const showHintNow = (id, { force = false } = {}) => {
     if (!hintsEnabled) {
       return false;
     }
@@ -381,9 +324,6 @@ const initGame = ({ textures, gameRoot }) => {
       return false;
     }
     const now = performance.now();
-    if (hintState.phase !== "hidden") {
-      return false;
-    }
     if (!force) {
       if (now < hintState.nextAllowedAt) {
         return false;
@@ -399,48 +339,117 @@ const initGame = ({ textures, gameRoot }) => {
     hintText.text = config.text;
     hintOverlay.alpha = 0;
     hintOverlay.visible = true;
+    updateHintLayout(getLayoutBounds());
     hintState.phase = "fadein";
     hintState.timer = 0;
+    hintState.activeId = id;
     hintState.lastShown.set(id, now);
-    scheduleHintGap(now);
+    hintState.nextAllowedAt = now + hintTiming.gap * 1000;
     return true;
   };
 
-  const seedHints = () => {
-    enqueueHint("pet", { priority: true, delayMs: 1200 });
-    enqueueHint("toys");
-    enqueueHint("fullscreen");
-    enqueueHint("settings");
-    enqueueHint("costumes");
-  };
-
-  const showHintConfirm = () => {
+  const tryShowNextHint = (now) => {
     if (!hintsEnabled) {
       return;
     }
-    hintOverlay.alpha = hintAlpha;
-    hintOverlay.visible = true;
-    hintConfirm.visible = true;
+    if (hintState.phase !== "hidden") {
+      return;
+    }
+    if (now < hintState.nextAllowedAt) {
+      return;
+    }
+    const nextIndex = hintState.queue.findIndex((entry) => entry.availableAt <= now);
+    if (nextIndex === -1) {
+      return;
+    }
+    const [entry] = hintState.queue.splice(nextIndex, 1);
+    if (entry) {
+      showHintNow(entry.id, { force: entry.force });
+    }
   };
 
-  const hideHintConfirm = () => {
-    hintConfirm.visible = false;
+  const showHint = (id, { priority = false, delayMs = 0, force = false } = {}) => {
+    if (!hintsEnabled) {
+      return false;
+    }
+    if (!hintConfig[id]) {
+      return false;
+    }
+    if (hintState.activeId === id || hintState.queue.some((entry) => entry.id === id)) {
+      return false;
+    }
+    const availableAt = performance.now() + Math.max(0, delayMs);
+    const entry = { id, availableAt, force: Boolean(force) };
+    if (priority) {
+      hintState.queue.unshift(entry);
+    } else {
+      hintState.queue.push(entry);
+    }
+    tryShowNextHint(performance.now());
+    return true;
+  };
+
+  const dismissHint = () => {
+    if (hintState.phase === "hidden") {
+      return;
+    }
+    hintState.phase = "hidden";
+    hintState.timer = 0;
+    hintState.activeId = null;
+    hintOverlay.alpha = 0;
+    hintOverlay.visible = false;
+    hintState.nextAllowedAt = performance.now() + hintTiming.gap * 1000;
+  };
+
+  const updateHint = (deltaSeconds) => {
+    if (!hintsEnabled) {
+      if (hintOverlay.visible) {
+        hintOverlay.alpha = 0;
+        hintOverlay.visible = false;
+      }
+      return;
+    }
+    if (hintState.phase !== "hidden") {
+      hintState.timer += deltaSeconds;
+      if (hintState.phase === "fadein") {
+        const t = clamp(hintState.timer / hintTiming.fadeIn, 0, 1);
+        hintOverlay.alpha = hintAlpha * t;
+        if (t >= 1) {
+          hintState.phase = "hold";
+          hintState.timer = 0;
+        }
+      } else if (hintState.phase === "hold") {
+        hintOverlay.alpha = hintAlpha;
+        if (hintState.timer >= hintTiming.hold) {
+          hintState.phase = "fadeout";
+          hintState.timer = 0;
+        }
+      } else if (hintState.phase === "fadeout") {
+        const t = clamp(hintState.timer / hintTiming.fadeOut, 0, 1);
+        hintOverlay.alpha = hintAlpha * (1 - t);
+        if (t >= 1) {
+          hintState.phase = "hidden";
+          hintState.activeId = null;
+          hintOverlay.alpha = 0;
+          hintOverlay.visible = false;
+        }
+      }
+      return;
+    }
+    tryShowNextHint(performance.now());
+  };
+
+  const seedHints = () => {
+    showHint("pet", { priority: true, delayMs: 1200 });
+    showHint("toys");
+    showHint("fullscreen");
+    showHint("settings");
+    showHint("costumes");
   };
 
   hintClose.on("pointerdown", (event) => {
     event.stopPropagation();
-    showHintConfirm();
-  });
-
-  hintConfirmYes.container.on("pointerdown", (event) => {
-    event.stopPropagation();
-    setHintsEnabled(false);
-    hideHintConfirm();
-  });
-
-  hintConfirmNo.container.on("pointerdown", (event) => {
-    event.stopPropagation();
-    hideHintConfirm();
+    dismissHint();
   });
 
   setHintsEnabled(hintsEnabled, { persist: false });
@@ -1479,85 +1488,52 @@ const initGame = ({ textures, gameRoot }) => {
   };
 
   const updateHintLayout = (layout) => {
-    if (!hintOverlay.visible && !hintConfirm.visible) {
+    if (!hintOverlay.visible) {
       return;
     }
     const scale = uiScaleState.scale;
-    const maxWidth = Math.min(layout.width * 0.8, 520);
+    const maxWidth = Math.min(layout.width - 24, 460);
     hintText.style.fontSize = Math.round(12 * scale);
     hintText.scale.set(1);
-    const textScale = Math.min(1, maxWidth / Math.max(1, hintText.width));
+    const paddingX = Math.round(10 * scale);
+    const paddingY = Math.round(6 * scale);
+    const closeSize = Math.round(12 * scale);
+    const closeGap = Math.round(8 * scale);
+    const textMaxWidth = Math.max(1, maxWidth - paddingX * 2 - closeSize - closeGap);
+    const textScale = Math.min(1, textMaxWidth / Math.max(1, hintText.width));
     hintText.scale.set(textScale);
 
-    const paddingX = 14 * scale;
-    const paddingY = 6 * scale;
-    const closeSize = 14 * scale;
-    const closeGap = 8 * scale;
     const rawWidth = hintText.width + paddingX * 2 + closeSize + closeGap;
-    const panelWidth = Math.min(rawWidth, layout.width - 24);
-    const panelHeight = Math.max(hintText.height + paddingY * 2, 24 * scale);
-    const radius = 8 * scale;
+    const panelWidth = Math.min(rawWidth, maxWidth);
+    const panelHeight = Math.max(Math.round(hintText.height + paddingY * 2), Math.round(22 * scale));
 
     hintOverlay.x = Math.round(layout.centerX);
-    hintOverlay.y = Math.round(layout.top + 16 * scale);
+    hintOverlay.y = Math.round(layout.top + 14 * scale);
 
     hintBackground.clear();
-    hintBackground.beginFill(0xf6f0e8, 0.92);
-    hintBackground.lineStyle(1, 0xcdbca8, 0.35);
-    hintBackground.drawRoundedRect(-panelWidth / 2, 0, panelWidth, panelHeight, radius);
+    hintBackground.lineStyle(1, 0x111111, 1);
+    hintBackground.beginFill(0xf4eee6, 1);
+    hintBackground.drawRect(-panelWidth / 2, 0, panelWidth, panelHeight);
     hintBackground.endFill();
 
-    hintText.x = -panelWidth / 2 + paddingX + hintText.width / 2;
-    hintText.y = panelHeight / 2;
+    hintText.x = Math.round(-panelWidth / 2 + paddingX);
+    hintText.y = Math.round(panelHeight / 2);
 
-    hintClose.x = panelWidth / 2 - closeGap - closeSize / 2;
-    hintClose.y = panelHeight / 2 - closeSize / 2;
+    hintClose.x = Math.round(panelWidth / 2 - paddingX - closeSize);
+    hintClose.y = Math.round((panelHeight - closeSize) / 2);
     hintCloseBg.clear();
-    hintCloseBg.beginFill(0x111111, 0.08);
-    hintCloseBg.drawRoundedRect(0, 0, closeSize, closeSize, 4 * scale);
+    hintCloseBg.lineStyle(1, 0x111111, 1);
+    hintCloseBg.beginFill(0xf4eee6, 1);
+    hintCloseBg.drawRect(0, 0, closeSize, closeSize);
     hintCloseBg.endFill();
     hintClose.hitArea = new PIXI.Rectangle(0, 0, closeSize, closeSize);
     hintCloseIcon.clear();
-    hintCloseIcon.lineStyle(Math.max(1, Math.round(1.5 * scale)), 0x111111, 0.6);
-    const iconPadding = 3 * scale;
+    hintCloseIcon.lineStyle(Math.max(1, Math.round(scale)), 0x111111, 1);
+    const iconPadding = Math.max(2, Math.round(3 * scale));
     hintCloseIcon.moveTo(iconPadding, iconPadding);
     hintCloseIcon.lineTo(closeSize - iconPadding, closeSize - iconPadding);
     hintCloseIcon.moveTo(closeSize - iconPadding, iconPadding);
     hintCloseIcon.lineTo(iconPadding, closeSize - iconPadding);
-
-    const confirmWidth = 150 * scale;
-    const confirmHeight = 58 * scale;
-    hintConfirm.x = Math.round(layout.centerX);
-    hintConfirm.y = Math.round(hintOverlay.y + panelHeight + 10 * scale);
-    hintConfirmBg.clear();
-    hintConfirmBg.beginFill(0xf6f0e8, 0.96);
-    hintConfirmBg.lineStyle(1, 0xcdbca8, 0.4);
-    hintConfirmBg.drawRoundedRect(-confirmWidth / 2, 0, confirmWidth, confirmHeight, radius);
-    hintConfirmBg.endFill();
-    hintConfirmText.style.fontSize = Math.round(12 * scale);
-    hintConfirmText.x = 0;
-    hintConfirmText.y = 18 * scale;
-
-    const buttonWidth = 52 * scale;
-    const buttonHeight = 22 * scale;
-    const buttonY = Math.round(confirmHeight - buttonHeight - 10 * scale);
-    const updateConfirmButton = (button) => {
-      button.bg.clear();
-      button.bg.beginFill(0x111111, 0.08);
-      button.bg.drawRoundedRect(0, 0, buttonWidth, buttonHeight, 6 * scale);
-      button.bg.endFill();
-      button.container.hitArea = new PIXI.Rectangle(0, 0, buttonWidth, buttonHeight);
-      button.text.style.fontSize = Math.round(11 * scale);
-      button.text.x = buttonWidth / 2;
-      button.text.y = buttonHeight / 2;
-    };
-
-    hintConfirmYes.container.x = -buttonWidth - 8 * scale;
-    hintConfirmYes.container.y = buttonY;
-    hintConfirmNo.container.x = 8 * scale;
-    hintConfirmNo.container.y = buttonY;
-    updateConfirmButton(hintConfirmYes);
-    updateConfirmButton(hintConfirmNo);
   };
 
   const setMenuVisible = (visible) => {
@@ -1566,7 +1542,7 @@ const initGame = ({ textures, gameRoot }) => {
       settingsButton.container.alpha = visible ? 0.32 : 0.18;
     }
     if (visible) {
-      enqueueHint("settings", { priority: true, delayMs: 300 });
+      showHint("settings", { priority: true, delayMs: 300 });
     }
   };
 
@@ -1609,7 +1585,7 @@ const initGame = ({ textures, gameRoot }) => {
     toysPanel.visible = visible;
     updateToyButtonAlpha();
     if (visible) {
-      enqueueHint("toys", { priority: true, delayMs: 300 });
+      showHint("toys", { priority: true, delayMs: 300 });
     }
   };
 
@@ -1719,7 +1695,7 @@ const initGame = ({ textures, gameRoot }) => {
     setMenuVisible(false);
     if (open) {
       setToysPanelVisible(false);
-      enqueueHint("costumes", { priority: true, delayMs: 300 });
+      showHint("costumes", { priority: true, delayMs: 300 });
     }
     updateClothesButtonAlpha();
   };
@@ -2312,7 +2288,7 @@ const initGame = ({ textures, gameRoot }) => {
     state.petDuration = totalDuration;
     showSprite("pet");
     registerActivity();
-    enqueueHint("pet");
+    showHint("pet");
     const now = performance.now();
     const timeSinceLastPet = now - lastPetAt;
     lastPetAt = now;
@@ -2341,7 +2317,7 @@ const initGame = ({ textures, gameRoot }) => {
     });
     if (petSpamCount >= petSpamTiming.requiredCount) {
       petSpamCount = 0;
-      enqueueHint("spam", { priority: true });
+      showHint("spam", { priority: true });
       if (now - lastHappyJumpAt >= 3200 && state.current !== "happy_jump_sequence") {
         lastHappyJumpAt = now;
         startHappyJumpSequence();
@@ -2806,47 +2782,7 @@ const initGame = ({ textures, gameRoot }) => {
         }
       }
     }
-    if (!hintsEnabled) {
-      if (hintOverlay.visible) {
-        hintOverlay.alpha = 0;
-        hintOverlay.visible = false;
-      }
-    } else if (hintState.phase !== "hidden") {
-      hintState.timer += deltaSeconds;
-      if (hintState.phase === "fadein") {
-        const t = clamp(hintState.timer / hintTiming.fadeIn, 0, 1);
-        hintOverlay.alpha = hintAlpha * t;
-        if (t >= 1) {
-          hintState.phase = "hold";
-          hintState.timer = 0;
-        }
-      } else if (hintState.phase === "hold") {
-        hintOverlay.alpha = hintAlpha;
-        if (hintState.timer >= hintTiming.hold) {
-          hintState.phase = "fadeout";
-          hintState.timer = 0;
-        }
-      } else if (hintState.phase === "fadeout") {
-        const t = clamp(hintState.timer / hintTiming.fadeOut, 0, 1);
-        hintOverlay.alpha = hintAlpha * (1 - t);
-        if (t >= 1) {
-          hintState.phase = "hidden";
-          hintOverlay.alpha = 0;
-          if (!hintConfirm.visible) {
-            hintOverlay.visible = false;
-          }
-        }
-      }
-    } else if (hintState.queue.length > 0) {
-      const now = performance.now();
-      if (now >= hintState.pendingDelayUntil) {
-        const nextHint = hintState.queue.shift();
-        if (nextHint && !tryShowHint(nextHint)) {
-          hintState.queue.push(nextHint);
-          scheduleHintGap(now);
-        }
-      }
-    }
+    updateHint(deltaSeconds);
     if (closetOpen) {
       closetSpotlightState.timer += deltaSeconds;
       const pulse = Math.sin(closetSpotlightState.timer * 0.6);
@@ -2862,7 +2798,7 @@ const initGame = ({ textures, gameRoot }) => {
       petHoldTimeMs += deltaMs;
       state.inactiveTime = 0;
       if (!holdHintTriggered && petHoldTimeMs >= petHoldTiming.gentleDelayMs) {
-        enqueueHint("hold", { priority: true });
+        showHint("hold", { priority: true });
         holdHintTriggered = true;
       }
       if (petHoldTimeMs >= petHoldTiming.ayoDelayMs && state.current !== "react_ayo") {
@@ -3410,6 +3346,15 @@ const initGame = ({ textures, gameRoot }) => {
     }
   });
 
+  registerAppListener(app, window, "keydown", (event) => {
+    if (event.repeat) {
+      return;
+    }
+    if (event.key === "g" || event.key === "G") {
+      showHint("test", { force: true });
+    }
+  });
+
   registerAppListener(app, window, "pointermove", handleWindowPointerMove);
 
   registerAppListener(app, window, "pointerup", (event) => {
@@ -3444,8 +3389,7 @@ const initGame = ({ textures, gameRoot }) => {
       const now = performance.now();
       markHintsSeen();
       if (hintsEnabled) {
-        hintState.pendingDelayUntil = now + 1800;
-        hintState.nextAllowedAt = now + 2200;
+        hintState.nextAllowedAt = now + 1800;
         seedHints();
       }
     },
