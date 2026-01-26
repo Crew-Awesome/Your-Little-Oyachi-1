@@ -72,10 +72,18 @@ const initGame = ({ textures, gameRoot }) => {
 
   const room = new PIXI.Container();
   const wall = new PIXI.Graphics();
+  const posterFrame = new PIXI.Graphics();
+  const wallShelf = new PIXI.Graphics();
+  const shelfItems = new PIXI.Graphics();
   const floor = new PIXI.Graphics();
   const floorMat = new PIXI.Graphics();
+  const rugDetail = new PIXI.Graphics();
   const seam = new PIXI.Graphics();
-  room.addChild(wall, floor, floorMat, seam);
+  posterFrame.roundPixels = true;
+  wallShelf.roundPixels = true;
+  shelfItems.roundPixels = true;
+  rugDetail.roundPixels = true;
+  room.addChild(wall, posterFrame, wallShelf, shelfItems, floor, floorMat, rugDetail, seam);
   room.zIndex = 0;
   stage.addChild(room);
 
@@ -1854,6 +1862,52 @@ const initGame = ({ textures, gameRoot }) => {
     wall.drawRect(0, 0, width, wallHeight);
     wall.endFill();
 
+    posterFrame.clear();
+    const posterWidth = Math.round(width * 0.18);
+    const posterHeight = Math.round(posterWidth * 0.68);
+    const posterX = Math.round(width * 0.18);
+    const posterY = Math.round(wallHeight * 0.18);
+    posterFrame.beginFill(0xd5c1ad, 1);
+    posterFrame.drawRect(posterX, posterY, posterWidth, posterHeight);
+    posterFrame.endFill();
+    posterFrame.beginFill(0xf4eee6, 1);
+    posterFrame.drawRect(posterX + 3, posterY + 3, posterWidth - 6, posterHeight - 6);
+    posterFrame.endFill();
+    posterFrame.lineStyle(1, 0x7a6653, 1);
+    posterFrame.moveTo(posterX + 8, posterY + 12);
+    posterFrame.lineTo(posterX + posterWidth - 8, posterY + 12);
+    posterFrame.moveTo(posterX + 8, posterY + posterHeight - 10);
+    posterFrame.lineTo(posterX + posterWidth - 12, posterY + posterHeight - 10);
+
+    wallShelf.clear();
+    shelfItems.clear();
+    const shelfWidth = Math.round(width * 0.2);
+    const shelfHeight = 6;
+    const shelfX = Math.round(width * 0.62);
+    const shelfY = Math.round(wallHeight * 0.3);
+    wallShelf.beginFill(0xc7b39c, 1);
+    wallShelf.drawRect(shelfX, shelfY, shelfWidth, shelfHeight);
+    wallShelf.endFill();
+    wallShelf.lineStyle(1, 0x8e7863, 1);
+    wallShelf.moveTo(shelfX, shelfY + shelfHeight);
+    wallShelf.lineTo(shelfX + shelfWidth, shelfY + shelfHeight);
+    const bookWidth = Math.round(shelfWidth * 0.22);
+    const bookHeight = 14;
+    const bookX = shelfX + 8;
+    const bookY = shelfY - bookHeight;
+    shelfItems.beginFill(0x8f6b5a, 1);
+    shelfItems.drawRect(bookX, bookY, bookWidth, bookHeight);
+    shelfItems.endFill();
+    shelfItems.beginFill(0x6b8c7a, 1);
+    shelfItems.drawRect(bookX + bookWidth + 6, bookY + 4, 12, 10);
+    shelfItems.endFill();
+    shelfItems.beginFill(0x9f8a75, 1);
+    shelfItems.drawRect(shelfX + shelfWidth - 20, shelfY - 8, 14, 8);
+    shelfItems.endFill();
+    shelfItems.beginFill(0x6f8f6b, 1);
+    shelfItems.drawRect(shelfX + shelfWidth - 18, shelfY - 14, 10, 6);
+    shelfItems.endFill();
+
     floor.clear();
     floor.beginFill(0xdac6ad);
     floor.drawRect(0, wallHeight, width, height - wallHeight);
@@ -1875,6 +1929,16 @@ const initGame = ({ textures, gameRoot }) => {
     floorMat.beginFill(0xd1bba1);
     floorMat.drawEllipse(matX, matY, matWidth / 2, matHeight / 2);
     floorMat.endFill();
+
+    rugDetail.clear();
+    rugDetail.lineStyle(1, 0xc3ac92, 1);
+    rugDetail.drawEllipse(matX, matY, matWidth * 0.38, matHeight * 0.32);
+    const stripeWidth = Math.round(matWidth * 0.28);
+    const stripeOffset = Math.round(matHeight * 0.16);
+    rugDetail.moveTo(matX - stripeWidth / 2, matY - stripeOffset);
+    rugDetail.lineTo(matX + stripeWidth / 2, matY - stripeOffset);
+    rugDetail.moveTo(matX - stripeWidth / 2, matY + stripeOffset);
+    rugDetail.lineTo(matX + stripeWidth / 2, matY + stripeOffset);
 
     seam.clear();
     seam.visible = false;
