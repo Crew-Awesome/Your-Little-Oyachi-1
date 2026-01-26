@@ -315,12 +315,9 @@ const initGame = ({ textures, gameRoot }) => {
       localStorage.setItem(hintStorageKeys.enabled, String(hintsEnabled));
     }
     if (hintToggleRow) {
-      hintToggleRow.enabled = hintsEnabled;
+      hintToggleRow.setEnabled(hintsEnabled);
       if (hintToggleRow.applyLayout && hintToggleRow.lastLayout) {
-        hintToggleRow.applyLayout(hintToggleRow.lastLayout, {
-          x: hintToggleRow.container.x,
-          y: hintToggleRow.container.y,
-        });
+        hintToggleRow.applyLayout(hintToggleRow.lastLayout, hintToggleRow.lastPosition);
       }
     }
     if (!hintsEnabled) {
@@ -559,257 +556,526 @@ const initGame = ({ textures, gameRoot }) => {
   optionsMenu.y = 46;
   optionsLayer.addChild(optionsMenu);
 
-  const menuLayout = {
-    width: 240,
-    height: 160,
-    radius: 8,
-    paddingX: 18,
-    paddingTop: 20,
-    sliderGap: 44,
+  const settingsLayout = {
+    width: 248,
+    height: 176,
+    radius: 6,
+    padding: 12,
+    tabHeight: 22,
+    tabWidth: 64,
+    tabGap: 6,
+    contentGap: 10,
+    rowHeight: 28,
+    rowGap: 8,
+    labelWidth: 64,
+    sliderWidth: 90,
+    sliderHeight: 6,
+    knobSize: 10,
+    sliderGap: 8,
+    buttonWidth: 26,
+    buttonHeight: 16,
+    buttonGap: 4,
+    toggleWidth: 30,
+    toggleHeight: 16,
   };
+
+  const settingsColors = {
+    panel: 0xf3e9db,
+    panelBorder: 0xd6c6b2,
+    tabActive: 0xffffff,
+    tabIdle: 0xe2d5c4,
+    tabHover: 0xe9dece,
+    tabPressed: 0xd9cbb8,
+    text: 0x111111,
+    textMuted: 0x6b5f52,
+    track: 0xd8ccb9,
+    trackHover: 0xd0c2b0,
+    trackActive: 0xc6b7a5,
+    fill: 0x8a7c69,
+    knob: 0x111111,
+    knobActive: 0x2b2218,
+    buttonIdle: 0xe2d5c4,
+    buttonHover: 0xd7c9b6,
+    buttonPressed: 0xc9b9a2,
+    buttonActive: 0x8a7c69,
+    buttonActiveText: 0xffffff,
+    toggleOff: 0xe2d5c4,
+    toggleOn: 0x8a7c69,
+    tileIdle: 0xe6d8c7,
+    tileActive: 0xc8b89f,
+    tileHover: 0xddcfbe,
+  };
+
+  const settingsTabs = [
+    { id: "audio", label: "Audio" },
+    { id: "hints", label: "Hints" },
+    { id: "other", label: "Other" },
+  ];
 
   const menuBackground = new PIXI.Graphics();
-  menuBackground.beginFill(0xf0f0f0, 0.9);
-  menuBackground.drawRoundedRect(0, 0, menuLayout.width, menuLayout.height, menuLayout.radius);
-  menuBackground.endFill();
   optionsMenu.addChild(menuBackground);
 
-  const toyPanelLayout = {
-    width: 156,
-    height: 100,
-    radius: 10,
-    iconX: 22,
-    labelX: 42,
-    fontSize: 12,
-    rowHeight: 34,
-    rowGap: 8,
-    paddingY: 12,
+  const tabsRow = new PIXI.Container();
+  optionsMenu.addChild(tabsRow);
+
+  const settingsContent = new PIXI.Container();
+  optionsMenu.addChild(settingsContent);
+
+  const audioTab = new PIXI.Container();
+  const hintsTab = new PIXI.Container();
+  const otherTab = new PIXI.Container();
+  settingsContent.addChild(audioTab, hintsTab, otherTab);
+
+  const settingsState = {
+    hovering: false,
+    activeTab: "audio",
   };
 
-  const sliderConfig = {
-    width: 140,
-    height: 6,
-    knobRadius: 8,
-    trackX: 80,
-    trackY: 9,
-    hitWidth: 260,
-    hitHeight: 32,
-    labelFontSize: 14,
-    labelWidth: 60,
-    toggleSize: 16,
-    toggleGap: 14,
+  const createTabButton = (tab) => {
+    const container = new PIXI.Container();
+    container.eventMode = "static";
+    container.cursor = "pointer";
+    const bg = new PIXI.Graphics();
+    const text = createPixelText(tab.label, {
+      fontSize: 12,
+      fill: settingsColors.text,
+      align: "center",
+    });
+    text.anchor.set(0.5);
+    container.addChild(bg, text);
+    const state = {
+      hovered: false,
+      pressed: false,
+      width: 0,
+      height: 0,
+    };
+    const update = () => {
+      let fill = settingsColors.tabIdle;
+      if (settingsState.activeTab === tab.id) {
+        fill = settingsColors.tabActive;
+      } else if (state.pressed) {
+        fill = settingsColors.tabPressed;
+      } else if (state.hovered) {
+        fill = settingsColors.tabHover;
+      }
+      bg.clear();
+      bg.beginFill(fill, 1);
+      bg.drawRect(0, 0, state.width, state.height);
+      bg.endFill();
+      text.x = Math.round(state.width / 2);
+      text.y = Math.round(state.height / 2);
+    };
+    const applyLayout = ({ width, height, x, y }) => {
+      state.width = width;
+      state.height = height;
+      container.x = x;
+      container.y = y;
+      container.hitArea = new PIXI.Rectangle(0, 0, width, height);
+      update();
+    };
+    container.on("pointerenter", () => {
+      state.hovered = true;
+      update();
+    });
+    container.on("pointerleave", () => {
+      state.hovered = false;
+      state.pressed = false;
+      update();
+    });
+    container.on("pointerdown", (event) => {
+      state.pressed = true;
+      update();
+      setActiveTab(tab.id);
+      event.stopPropagation();
+    });
+    container.on("pointerup", () => {
+      state.pressed = false;
+      update();
+    });
+    container.on("pointerupoutside", () => {
+      state.pressed = false;
+      update();
+    });
+    return { container, applyLayout, update };
   };
+
+  const tabButtons = settingsTabs.map((tab) => createTabButton(tab));
+  tabButtons.forEach((button) => tabsRow.addChild(button.container));
+
+  const setActiveTab = (id) => {
+    settingsState.activeTab = id;
+    audioTab.visible = id === "audio";
+    hintsTab.visible = id === "hints";
+    otherTab.visible = id === "other";
+    tabButtons.forEach((button) => button.update());
+  };
+
+  setActiveTab(settingsState.activeTab);
 
   const sliderState = {
     active: null,
     pointerId: null,
   };
 
-  const createSlider = ({ label, y, value, enabled, onChange, onToggle }) => {
+  const createTextButton = (label) => {
     const container = new PIXI.Container();
-    container.x = menuLayout.paddingX;
-    container.y = y;
     container.eventMode = "static";
-    container.hitArea = new PIXI.Rectangle(0, 0, sliderConfig.hitWidth, sliderConfig.hitHeight);
-
-    const labelText = createPixelText(label, {
-      fontSize: sliderConfig.labelFontSize,
-      fill: 0x111111,
+    container.cursor = "pointer";
+    const bg = new PIXI.Graphics();
+    const text = createPixelText(label, {
+      fontSize: 10,
+      fill: settingsColors.text,
+      align: "center",
     });
-    labelText.alpha = 0.55;
-    labelText.x = 0;
-    labelText.y = 0;
-    labelText.width = sliderConfig.labelWidth;
-    container.addChild(labelText);
+    text.anchor.set(0.5);
+    container.addChild(bg, text);
+    const state = {
+      active: false,
+      hovered: false,
+      pressed: false,
+      width: 0,
+      height: 0,
+    };
+    const update = () => {
+      let fill = settingsColors.buttonIdle;
+      let textColor = settingsColors.text;
+      if (state.active) {
+        fill = settingsColors.buttonActive;
+        textColor = settingsColors.buttonActiveText;
+      } else if (state.pressed) {
+        fill = settingsColors.buttonPressed;
+      } else if (state.hovered) {
+        fill = settingsColors.buttonHover;
+      }
+      bg.clear();
+      bg.beginFill(fill, 1);
+      bg.drawRect(0, 0, state.width, state.height);
+      bg.endFill();
+      text.style.fill = textColor;
+      text.x = Math.round(state.width / 2);
+      text.y = Math.round(state.height / 2);
+    };
+    const setLayout = (width, height) => {
+      state.width = width;
+      state.height = height;
+      container.hitArea = new PIXI.Rectangle(0, 0, width, height);
+      update();
+    };
+    const setActive = (active) => {
+      state.active = active;
+      update();
+    };
+    container.on("pointerenter", () => {
+      state.hovered = true;
+      update();
+    });
+    container.on("pointerleave", () => {
+      state.hovered = false;
+      state.pressed = false;
+      update();
+    });
+    container.on("pointerdown", () => {
+      state.pressed = true;
+      update();
+    });
+    container.on("pointerup", () => {
+      state.pressed = false;
+      update();
+    });
+    container.on("pointerupoutside", () => {
+      state.pressed = false;
+      update();
+    });
+    return { container, setLayout, setActive, update };
+  };
 
-    const track = new PIXI.Graphics();
-    track.beginFill(0x111111, 0.2);
-    track.drawRoundedRect(0, 0, sliderConfig.width, sliderConfig.height, 2);
-    track.endFill();
-    track.x = sliderConfig.trackX;
-    track.y = sliderConfig.trackY;
-    container.addChild(track);
-
+  const createSliderRow = ({ label, value, enabled, onChange, onToggle }) => {
+    const container = new PIXI.Container();
+    container.eventMode = "static";
+    const labelText = createPixelText(label, {
+      fontSize: 12,
+      fill: settingsColors.text,
+      align: "left",
+    });
+    labelText.anchor.set(0, 0.5);
+    const trackBg = new PIXI.Graphics();
+    const trackFill = new PIXI.Graphics();
     const knob = new PIXI.Graphics();
-    knob.beginFill(0x111111, 0.7);
-    knob.drawCircle(0, 0, sliderConfig.knobRadius);
-    knob.endFill();
-    knob.y = track.y + sliderConfig.height / 2;
-    container.addChild(knob);
-
-    const toggle = new PIXI.Container();
-    toggle.eventMode = "static";
-    toggle.cursor = "pointer";
-    const toggleIcon = new PIXI.Sprite(textures.ui_check);
-    toggleIcon.anchor.set(0.5);
-    toggleIcon.roundPixels = true;
-    toggle.addChild(toggleIcon);
-    container.addChild(toggle);
-
+    const onButton = createTextButton("On");
+    const offButton = createTextButton("Off");
+    container.addChild(labelText, trackBg, trackFill, knob, onButton.container, offButton.container);
     const sliderData = {
       container,
       labelText,
-      track,
+      trackBg,
+      trackFill,
       knob,
-      toggle,
-      toggleIcon,
-      trackX: track.x,
-      trackWidth: sliderConfig.width,
+      onButton,
+      offButton,
       value,
-      onChange,
       enabled,
+      onChange,
       onToggle,
+      trackX: 0,
+      trackY: 0,
+      trackWidth: 0,
+      trackHeight: 0,
+      knobSize: 0,
+      hover: false,
+      active: false,
       lastLayout: null,
+      lastPosition: null,
       updateFromGlobal: null,
       applyLayout: null,
+      setActive: null,
+      setEnabled: null,
+      refresh: null,
     };
 
-    const updateKnob = (newValue, { notify = false } = {}) => {
+    const drawTrack = () => {
+      const displayValue = sliderData.enabled ? sliderData.value : 0;
+      const fillWidth = Math.round(sliderData.trackWidth * displayValue);
+      let trackColor = settingsColors.track;
+      let knobColor = settingsColors.knob;
+      if (sliderData.active) {
+        trackColor = settingsColors.trackActive;
+        knobColor = settingsColors.knobActive;
+      } else if (sliderData.hover) {
+        trackColor = settingsColors.trackHover;
+      }
+      trackBg.clear();
+      trackBg.beginFill(trackColor, 1);
+      trackBg.drawRect(sliderData.trackX, sliderData.trackY, sliderData.trackWidth, sliderData.trackHeight);
+      trackBg.endFill();
+      trackFill.clear();
+      trackFill.beginFill(settingsColors.fill, 1);
+      trackFill.drawRect(sliderData.trackX, sliderData.trackY, fillWidth, sliderData.trackHeight);
+      trackFill.endFill();
+      knob.clear();
+      knob.beginFill(knobColor, 1);
+      knob.drawRect(0, 0, sliderData.knobSize, sliderData.knobSize);
+      knob.endFill();
+      knob.x = Math.round(sliderData.trackX + sliderData.trackWidth * displayValue - sliderData.knobSize / 2);
+      knob.y = Math.round(sliderData.trackY - (sliderData.knobSize - sliderData.trackHeight) / 2);
+      labelText.alpha = sliderData.enabled ? 1 : 0.6;
+    };
+
+    const setValue = (newValue, { notify = false } = {}) => {
       sliderData.value = clamp(newValue, 0, 1);
-      knob.x = sliderData.trackX + sliderData.trackWidth * sliderData.value;
+      drawTrack();
       if (notify && typeof sliderData.onChange === "function") {
         sliderData.onChange(sliderData.value);
       }
     };
 
     const updateFromGlobal = (global) => {
+      if (!sliderData.enabled) {
+        return;
+      }
       const local = container.toLocal(global);
       const raw = (local.x - sliderData.trackX) / sliderData.trackWidth;
-      updateKnob(raw, { notify: true });
+      setValue(raw, { notify: true });
     };
 
     sliderData.updateFromGlobal = updateFromGlobal;
 
+    const setActive = (active) => {
+      sliderData.active = active;
+      drawTrack();
+    };
+
+    sliderData.setActive = setActive;
+
+    const setEnabled = (enabledState) => {
+      sliderData.enabled = Boolean(enabledState);
+      drawTrack();
+      onButton.setActive(sliderData.enabled);
+      offButton.setActive(!sliderData.enabled);
+    };
+
+    sliderData.setEnabled = setEnabled;
+
+    sliderData.refresh = drawTrack;
+
     const applyLayout = (layout, position) => {
       sliderData.lastLayout = layout;
+      sliderData.lastPosition = position;
       container.x = position.x;
       container.y = position.y;
-      container.hitArea = new PIXI.Rectangle(0, 0, layout.hitWidth, layout.hitHeight);
       labelText.style.fontSize = layout.labelFontSize;
-      labelText.width = layout.labelWidth;
-      track.clear();
-      track.beginFill(0x111111, 0.2);
-      track.drawRoundedRect(0, 0, layout.width, layout.height, 2);
-      track.endFill();
-      track.x = layout.trackX;
-      track.y = layout.trackY;
-      knob.clear();
-      knob.beginFill(0x111111, 0.7);
-      knob.drawCircle(0, 0, layout.knobRadius);
-      knob.endFill();
-      knob.y = track.y + layout.height / 2;
-      sliderData.trackX = track.x;
-      sliderData.trackWidth = layout.width;
-      toggle.x = layout.trackX + layout.width + layout.toggleGap;
-      toggle.y = Math.round(layout.trackY - layout.toggleSize / 2 + layout.height / 2);
-      toggle.hitArea = new PIXI.Rectangle(0, 0, layout.toggleSize, layout.toggleSize);
-      toggleIcon.scale.set(
-        layout.toggleSize /
-          getTextureDimension(toggleIcon.texture, "width", layout.toggleSize),
-      );
-      toggleIcon.alpha = sliderData.enabled ? 0.75 : 0.18;
-      toggleIcon.x = layout.toggleSize / 2;
-      toggleIcon.y = layout.toggleSize / 2;
-      updateKnob(sliderData.value);
+      labelText.x = 0;
+      labelText.y = Math.round(layout.rowHeight / 2);
+      sliderData.trackX = layout.labelWidth + layout.sliderGap;
+      sliderData.trackY = Math.round((layout.rowHeight - layout.sliderHeight) / 2);
+      sliderData.trackWidth = layout.sliderWidth;
+      sliderData.trackHeight = layout.sliderHeight;
+      sliderData.knobSize = layout.knobSize;
+      onButton.setLayout(layout.buttonWidth, layout.buttonHeight);
+      offButton.setLayout(layout.buttonWidth, layout.buttonHeight);
+      const buttonsX =
+        sliderData.trackX + layout.sliderWidth + layout.buttonGap;
+      const buttonsY = Math.round((layout.rowHeight - layout.buttonHeight) / 2);
+      onButton.container.x = Math.round(buttonsX);
+      onButton.container.y = buttonsY;
+      offButton.container.x = Math.round(buttonsX + layout.buttonWidth + layout.buttonGap);
+      offButton.container.y = buttonsY;
+      container.hitArea = new PIXI.Rectangle(0, 0, layout.rowWidth, layout.rowHeight);
+      drawTrack();
+      onButton.setActive(sliderData.enabled);
+      offButton.setActive(!sliderData.enabled);
     };
 
     sliderData.applyLayout = applyLayout;
 
-    const handlePointerDown = (event) => {
+    container.on("pointerenter", () => {
+      sliderData.hover = true;
+      drawTrack();
+    });
+    container.on("pointerleave", () => {
+      sliderData.hover = false;
+      if (sliderState.active !== sliderData) {
+        sliderData.active = false;
+      }
+      drawTrack();
+    });
+
+    container.on("pointerdown", (event) => {
       if (!sliderData.enabled) {
         event.stopPropagation();
         return;
       }
       sliderState.active = sliderData;
       sliderState.pointerId = getPointerId(event);
+      sliderData.setActive(true);
       updateFromGlobal(event.data.global);
       event.stopPropagation();
-    };
+    });
 
-    container.on("pointerdown", handlePointerDown);
-    toggle.on("pointerdown", (event) => {
-      sliderData.enabled = !sliderData.enabled;
-      if (typeof sliderData.onToggle === "function") {
-        sliderData.onToggle(sliderData.enabled);
+    onButton.container.on("pointerdown", (event) => {
+      if (!sliderData.enabled) {
+        sliderData.enabled = true;
+        if (typeof sliderData.onToggle === "function") {
+          sliderData.onToggle(true);
+        }
       }
       if (typeof sliderData.syncWithAudio === "function") {
         sliderData.syncWithAudio();
       }
-      if (sliderData.applyLayout && sliderData.lastLayout) {
-        sliderData.applyLayout(sliderData.lastLayout, { x: container.x, y: container.y });
-      }
+      setEnabled(true);
       event.stopPropagation();
     });
 
-    updateKnob(value);
+    offButton.container.on("pointerdown", (event) => {
+      if (sliderData.enabled) {
+        sliderData.enabled = false;
+        if (typeof sliderData.onToggle === "function") {
+          sliderData.onToggle(false);
+        }
+      }
+      if (typeof sliderData.syncWithAudio === "function") {
+        sliderData.syncWithAudio();
+      }
+      setEnabled(false);
+      event.stopPropagation();
+    });
 
+    setValue(value);
     return sliderData;
   };
 
-  const createToggleRow = ({ label, y, enabled, onToggle }) => {
+  const createToggleRow = ({ label, enabled, onToggle }) => {
     const container = new PIXI.Container();
-    container.x = menuLayout.paddingX;
-    container.y = y;
     container.eventMode = "static";
-    container.hitArea = new PIXI.Rectangle(0, 0, sliderConfig.hitWidth, sliderConfig.hitHeight);
-
     const labelText = createPixelText(label, {
-      fontSize: sliderConfig.labelFontSize,
-      fill: 0x111111,
+      fontSize: 12,
+      fill: settingsColors.text,
+      align: "left",
     });
-    labelText.alpha = 0.55;
-    labelText.x = 0;
-    labelText.y = 0;
-    container.addChild(labelText);
-
+    labelText.anchor.set(0, 0.5);
     const toggle = new PIXI.Container();
     toggle.eventMode = "static";
     toggle.cursor = "pointer";
-    const toggleIcon = new PIXI.Sprite(textures.ui_check);
-    toggleIcon.anchor.set(0.5);
-    toggleIcon.roundPixels = true;
-    toggle.addChild(toggleIcon);
-    container.addChild(toggle);
-
+    const toggleBg = new PIXI.Graphics();
+    const toggleKnob = new PIXI.Graphics();
+    toggle.addChild(toggleBg, toggleKnob);
+    container.addChild(labelText, toggle);
     const rowData = {
       container,
       labelText,
       toggle,
-      toggleIcon,
+      toggleBg,
+      toggleKnob,
       enabled,
       onToggle,
+      hover: false,
       lastLayout: null,
+      lastPosition: null,
       applyLayout: null,
+      setEnabled: null,
     };
+
+    const drawToggle = () => {
+      const layout = rowData.lastLayout;
+      if (!layout) {
+        return;
+      }
+      const baseFill = rowData.enabled ? settingsColors.toggleOn : settingsColors.toggleOff;
+      const hoverFill = rowData.enabled ? settingsColors.toggleOn : settingsColors.tabHover;
+      const fill = rowData.hover ? hoverFill : baseFill;
+      toggleBg.clear();
+      toggleBg.beginFill(fill, 1);
+      toggleBg.drawRect(0, 0, layout.toggleWidth, layout.toggleHeight);
+      toggleBg.endFill();
+      const knobSize = layout.toggleHeight - 4;
+      const knobX = rowData.enabled
+        ? layout.toggleWidth - knobSize - 2
+        : 2;
+      toggleKnob.clear();
+      toggleKnob.beginFill(0x111111, 1);
+      toggleKnob.drawRect(0, 0, knobSize, knobSize);
+      toggleKnob.endFill();
+      toggleKnob.x = Math.round(knobX);
+      toggleKnob.y = 2;
+    };
+
+    const setEnabled = (enabledState) => {
+      rowData.enabled = Boolean(enabledState);
+      drawToggle();
+    };
+
+    rowData.setEnabled = setEnabled;
 
     const applyLayout = (layout, position) => {
       rowData.lastLayout = layout;
+      rowData.lastPosition = position;
       container.x = position.x;
       container.y = position.y;
-      container.hitArea = new PIXI.Rectangle(0, 0, layout.hitWidth, layout.hitHeight);
       labelText.style.fontSize = layout.labelFontSize;
-      toggle.x = layout.rowWidth - layout.toggleSize;
-      toggle.y = Math.round(layout.hitHeight / 2 - layout.toggleSize / 2);
-      toggle.hitArea = new PIXI.Rectangle(0, 0, layout.toggleSize, layout.toggleSize);
-      toggleIcon.scale.set(
-        layout.toggleSize /
-          getTextureDimension(toggleIcon.texture, "width", layout.toggleSize),
-      );
-      toggleIcon.alpha = rowData.enabled ? 0.75 : 0.18;
-      toggleIcon.x = layout.toggleSize / 2;
-      toggleIcon.y = layout.toggleSize / 2;
+      labelText.x = 0;
+      labelText.y = Math.round(layout.rowHeight / 2);
+      toggle.x = layout.rowWidth - layout.toggleWidth;
+      toggle.y = Math.round(layout.rowHeight / 2 - layout.toggleHeight / 2);
+      toggle.hitArea = new PIXI.Rectangle(0, 0, layout.toggleWidth, layout.toggleHeight);
+      container.hitArea = new PIXI.Rectangle(0, 0, layout.rowWidth, layout.rowHeight);
+      drawToggle();
     };
 
     rowData.applyLayout = applyLayout;
 
+    toggle.on("pointerenter", () => {
+      rowData.hover = true;
+      drawToggle();
+    });
+    toggle.on("pointerleave", () => {
+      rowData.hover = false;
+      drawToggle();
+    });
     toggle.on("pointerdown", (event) => {
       rowData.enabled = !rowData.enabled;
       if (typeof rowData.onToggle === "function") {
         rowData.onToggle(rowData.enabled);
       }
-      if (rowData.applyLayout && rowData.lastLayout) {
-        rowData.applyLayout(rowData.lastLayout, { x: container.x, y: container.y });
-      }
+      drawToggle();
       event.stopPropagation();
     });
 
@@ -844,15 +1110,13 @@ const initGame = ({ textures, gameRoot }) => {
   };
 
   const syncSliderToAudio = (slider, getVolume, getEnabled) => {
-    slider.enabled = getEnabled();
-    slider.value = slider.enabled ? getVolume() : 0;
-    slider.knob.x = slider.trackX + slider.trackWidth * slider.value;
-    slider.toggleIcon.alpha = slider.enabled ? 0.75 : 0.18;
+    slider.value = getVolume();
+    slider.setEnabled(getEnabled());
+    slider.refresh();
   };
 
-  const musicSlider = createSlider({
+  const musicSlider = createSliderRow({
     label: "Music",
-    y: menuLayout.paddingTop,
     value: audioSystem.getMusicEnabled() ? audioSystem.getMusicVolume() : 0,
     enabled: audioSystem.getMusicEnabled(),
     onChange: saveMusicVolume,
@@ -861,9 +1125,8 @@ const initGame = ({ textures, gameRoot }) => {
   musicSlider.syncWithAudio = () => {
     syncSliderToAudio(musicSlider, audioSystem.getMusicVolume, audioSystem.getMusicEnabled);
   };
-  const sfxSlider = createSlider({
+  const sfxSlider = createSliderRow({
     label: "SFX",
-    y: menuLayout.paddingTop + menuLayout.sliderGap,
     value: audioSystem.getSfxEnabled() ? audioSystem.getSfxVolume() : 0,
     enabled: audioSystem.getSfxEnabled(),
     onChange: saveSfxVolume,
@@ -874,16 +1137,13 @@ const initGame = ({ textures, gameRoot }) => {
   };
   hintToggleRow = createToggleRow({
     label: "Show Hints",
-    y: menuLayout.paddingTop + menuLayout.sliderGap * 2,
     enabled: hintsEnabled,
     onToggle: saveHintsEnabled,
   });
-  optionsMenu.addChild(musicSlider.container, sfxSlider.container, hintToggleRow.container);
+  audioTab.addChild(musicSlider.container, sfxSlider.container);
+  hintsTab.addChild(hintToggleRow.container);
 
   const sliders = [musicSlider, sfxSlider];
-  const settingsState = {
-    hovering: false,
-  };
 
   const toysButton = createIconButton({
     texture: textures.ui_toys,
@@ -895,73 +1155,124 @@ const initGame = ({ textures, gameRoot }) => {
   });
   uiLayer.addChild(toysButton.container, clothesButton.container);
 
+  const toyPanelLayout = {
+    width: 200,
+    height: 112,
+    radius: 6,
+    padding: 10,
+    titleHeight: 16,
+    titleGap: 8,
+    columns: 2,
+    tileWidth: 74,
+    tileHeight: 48,
+    tileGap: 8,
+    iconSize: 18,
+  };
+
   const toysPanel = new PIXI.Container();
   toysPanel.visible = false;
   toysPanel.eventMode = "static";
   uiLayer.addChild(toysPanel);
 
   const toysPanelBackground = new PIXI.Graphics();
-  toysPanel.addChild(toysPanelBackground);
-
-  const ballOption = new PIXI.Container();
-  ballOption.eventMode = "static";
-  ballOption.cursor = "pointer";
-  const ballOptionHighlight = new PIXI.Graphics();
-  const ballOptionIcon = new PIXI.Sprite(textures.ball);
-  ballOptionIcon.anchor.set(0.5);
-  ballOptionIcon.roundPixels = true;
-  const ballOptionLabel = createPixelText("Ball", {
+  const toysPanelTitle = createPixelText("Toys", {
     fontSize: 12,
-    fill: 0x111111,
+    fill: settingsColors.text,
+    align: "left",
   });
-  ballOptionLabel.anchor.set(0, 0.5);
-  ballOption.addChild(ballOptionHighlight, ballOptionIcon, ballOptionLabel);
-  toysPanel.addChild(ballOption);
+  toysPanelTitle.anchor.set(0, 0.5);
+  const toysGrid = new PIXI.Container();
+  toysPanel.addChild(toysPanelBackground, toysPanelTitle, toysGrid);
 
-  const noToyOption = new PIXI.Container();
-  noToyOption.eventMode = "static";
-  noToyOption.cursor = "pointer";
-  const noToyOptionHighlight = new PIXI.Graphics();
-  const noToyOptionIcon = new PIXI.Sprite(textures.ui_check);
-  noToyOptionIcon.anchor.set(0.5);
-  noToyOptionIcon.roundPixels = true;
-  noToyOptionIcon.alpha = 0.35;
-  const noToyOptionLabel = createPixelText("No toy", {
-    fontSize: 12,
-    fill: 0x111111,
-  });
-  noToyOptionLabel.anchor.set(0, 0.5);
-  noToyOption.addChild(noToyOptionHighlight, noToyOptionIcon, noToyOptionLabel);
-  toysPanel.addChild(noToyOption);
+  const toysList = [
+    { id: "ball", label: "Ball", texture: textures.ball },
+  ];
+  const toyTiles = new Map();
+  const activeToys = new Set();
 
-  let selectedToy = "ball";
-  const updateToySelection = () => {
-    ballOptionHighlight.clear();
-    noToyOptionHighlight.clear();
-    if (selectedToy === "ball") {
-      ballOptionHighlight.beginFill(0x111111, 0.08);
-      ballOptionHighlight.drawRoundedRect(
-        0,
-        0,
-        toyPanelLayout.width,
-        toyPanelLayout.rowHeight,
-        toyPanelLayout.rowHeight / 2,
-      );
-      ballOptionHighlight.endFill();
-    }
-    if (selectedToy === "none") {
-      noToyOptionHighlight.beginFill(0x111111, 0.08);
-      noToyOptionHighlight.drawRoundedRect(
-        0,
-        0,
-        toyPanelLayout.width,
-        toyPanelLayout.rowHeight,
-        toyPanelLayout.rowHeight / 2,
-      );
-      noToyOptionHighlight.endFill();
-    }
+  const updateToyTiles = () => {
+    toyTiles.forEach((tile, id) => {
+      tile.setActive(activeToys.has(id));
+    });
   };
-  updateToySelection();
+
+  const toggleToy = (id) => {
+    if (activeToys.has(id)) {
+      activeToys.delete(id);
+      if (id === "ball") {
+        disableBall();
+      }
+    } else {
+      activeToys.add(id);
+      if (id === "ball") {
+        spawnBallAt(oyachi.x);
+      }
+    }
+    updateToyTiles();
+  };
+
+  const createToyTile = (toy) => {
+    const container = new PIXI.Container();
+    container.eventMode = "static";
+    container.cursor = "pointer";
+    const bg = new PIXI.Graphics();
+    const icon = new PIXI.Sprite(toy.texture);
+    icon.anchor.set(0.5);
+    icon.roundPixels = true;
+    const label = createPixelText(toy.label, {
+      fontSize: 10,
+      fill: settingsColors.text,
+      align: "center",
+    });
+    label.anchor.set(0.5);
+    container.addChild(bg, icon, label);
+    const tileState = {
+      active: false,
+      hover: false,
+    };
+    const updateVisuals = () => {
+      let fill = settingsColors.tileIdle;
+      if (tileState.active) {
+        fill = settingsColors.tileActive;
+      } else if (tileState.hover) {
+        fill = settingsColors.tileHover;
+      }
+      bg.clear();
+      bg.beginFill(fill, 1);
+      bg.drawRect(0, 0, toyPanelLayout.tileWidth, toyPanelLayout.tileHeight);
+      bg.endFill();
+      icon.alpha = tileState.active ? 1 : 0.55;
+      label.style.fill = tileState.active ? settingsColors.text : settingsColors.textMuted;
+    };
+    const setActive = (active) => {
+      tileState.active = active;
+      updateVisuals();
+    };
+    const setHover = (hover) => {
+      tileState.hover = hover;
+      updateVisuals();
+    };
+    container.on("pointerenter", () => {
+      setHover(true);
+    });
+    container.on("pointerleave", () => {
+      setHover(false);
+    });
+    container.on("pointerdown", (event) => {
+      toggleToy(toy.id);
+      event.stopPropagation();
+    });
+    updateVisuals();
+    return { container, bg, icon, label, setActive, setHover };
+  };
+
+  toysList.forEach((toy) => {
+    const tile = createToyTile(toy);
+    toyTiles.set(toy.id, tile);
+    toysGrid.addChild(tile.container);
+  });
+
+  updateToyTiles();
 
   const uiScaleState = {
     compact: false,
@@ -970,7 +1281,8 @@ const initGame = ({ textures, gameRoot }) => {
     bottomIconScale: 1,
     bottomIconSpacing: 0,
     menuBoost: 1,
-    menuWidth: menuLayout.width,
+    menuWidth: settingsLayout.width,
+    menuHeight: settingsLayout.height,
     toyPanelWidth: 0,
     toyPanelHeight: 0,
   };
@@ -1031,76 +1343,95 @@ const initGame = ({ textures, gameRoot }) => {
     updateIconHitArea(toysButton);
     updateIconHitArea(clothesButton);
 
-    const panelWidth = menuLayout.width * uiScaleState.menuBoost;
-    const panelHeight = menuLayout.height * uiScaleState.menuBoost;
-    const panelRadius = menuLayout.radius * uiScaleState.menuBoost;
-    const paddingX = menuLayout.paddingX * uiScaleState.menuBoost;
-    const paddingTop = menuLayout.paddingTop * uiScaleState.menuBoost;
-    const sliderGap = menuLayout.sliderGap * uiScaleState.menuBoost;
-    const sliderAreaWidth = Math.max(1, panelWidth - paddingX * 2);
-    const sliderTrackX = sliderConfig.trackX * uiScaleState.menuBoost;
-    const sliderToggleGap = sliderConfig.toggleGap * uiScaleState.menuBoost;
-    const sliderToggleSize = sliderConfig.toggleSize * uiScaleState.menuBoost;
-    const sliderMaxWidth = Math.max(
-      80 * uiScaleState.menuBoost,
-      sliderAreaWidth - sliderTrackX - sliderToggleGap - sliderToggleSize - 4,
-    );
-    const sliderTrackWidth = clamp(
-      sliderConfig.width * uiScaleState.menuBoost,
-      60 * uiScaleState.menuBoost,
-      sliderMaxWidth,
-    );
+    const panelWidth = Math.round(settingsLayout.width * uiScaleState.menuBoost);
+    const panelHeight = Math.round(settingsLayout.height * uiScaleState.menuBoost);
+    const panelRadius = Math.round(settingsLayout.radius * uiScaleState.menuBoost);
+    const padding = Math.round(settingsLayout.padding * uiScaleState.menuBoost);
+    const tabHeight = Math.round(settingsLayout.tabHeight * uiScaleState.menuBoost);
+    const tabWidth = Math.round(settingsLayout.tabWidth * uiScaleState.menuBoost);
+    const tabGap = Math.round(settingsLayout.tabGap * uiScaleState.menuBoost);
+    const contentGap = Math.round(settingsLayout.contentGap * uiScaleState.menuBoost);
+    const rowHeight = Math.round(settingsLayout.rowHeight * uiScaleState.menuBoost);
+    const rowGap = Math.round(settingsLayout.rowGap * uiScaleState.menuBoost);
+    const labelWidth = Math.round(settingsLayout.labelWidth * uiScaleState.menuBoost);
+    const sliderWidth = Math.round(settingsLayout.sliderWidth * uiScaleState.menuBoost);
+    const sliderHeight = Math.round(settingsLayout.sliderHeight * uiScaleState.menuBoost);
+    const knobSize = Math.round(settingsLayout.knobSize * uiScaleState.menuBoost);
+    const sliderGap = Math.round(settingsLayout.sliderGap * uiScaleState.menuBoost);
+    const buttonWidth = Math.round(settingsLayout.buttonWidth * uiScaleState.menuBoost);
+    const buttonHeight = Math.round(settingsLayout.buttonHeight * uiScaleState.menuBoost);
+    const buttonGap = Math.round(settingsLayout.buttonGap * uiScaleState.menuBoost);
+    const toggleWidth = Math.round(settingsLayout.toggleWidth * uiScaleState.menuBoost);
+    const toggleHeight = Math.round(settingsLayout.toggleHeight * uiScaleState.menuBoost);
+    const contentWidth = Math.max(1, panelWidth - padding * 2);
 
     menuBackground.clear();
-    menuBackground.beginFill(0xf0f0f0, 0.9);
+    menuBackground.beginFill(settingsColors.panel, 1);
+    menuBackground.lineStyle(1, settingsColors.panelBorder, 1);
     menuBackground.drawRoundedRect(0, 0, panelWidth, panelHeight, panelRadius);
     menuBackground.endFill();
 
     uiScaleState.menuWidth = panelWidth;
+    uiScaleState.menuHeight = panelHeight;
+
+    tabsRow.x = padding;
+    tabsRow.y = padding;
+    tabButtons.forEach((button, index) => {
+      button.applyLayout({
+        width: tabWidth,
+        height: tabHeight,
+        x: Math.round(index * (tabWidth + tabGap)),
+        y: 0,
+      });
+    });
+
+    const contentX = padding;
+    const contentY = padding + tabHeight + contentGap;
+    audioTab.x = contentX;
+    audioTab.y = contentY;
+    hintsTab.x = contentX;
+    hintsTab.y = contentY;
+    otherTab.x = contentX;
+    otherTab.y = contentY;
 
     const sliderLayout = {
-      width: sliderTrackWidth,
-      height: sliderConfig.height * uiScaleState.menuBoost,
-      knobRadius: sliderConfig.knobRadius * uiScaleState.menuBoost,
-      trackX: sliderTrackX,
-      trackY: sliderConfig.trackY * uiScaleState.menuBoost,
-      hitWidth: Math.min(sliderConfig.hitWidth * uiScaleState.menuBoost, sliderAreaWidth),
-      hitHeight: sliderConfig.hitHeight * uiScaleState.menuBoost,
-      toggleSize: sliderToggleSize,
-      toggleGap: sliderToggleGap,
-      labelFontSize: Math.round(
-        sliderConfig.labelFontSize * uiScaleState.menuBoost,
-      ),
-      labelWidth: sliderConfig.labelWidth * uiScaleState.menuBoost,
+      rowWidth: contentWidth,
+      rowHeight,
+      rowGap,
+      labelWidth,
+      sliderWidth,
+      sliderHeight,
+      knobSize,
+      sliderGap,
+      buttonWidth,
+      buttonHeight,
+      buttonGap,
+      labelFontSize: Math.round(12 * uiScaleState.menuBoost),
     };
 
     sliders.forEach((slider, index) => {
       slider.applyLayout(sliderLayout, {
-        x: paddingX,
-        y: paddingTop + sliderGap * index,
+        x: 0,
+        y: Math.round(index * (rowHeight + rowGap)),
       });
     });
 
     if (hintToggleRow) {
       const toggleLayout = {
-        rowWidth: sliderAreaWidth,
-        hitWidth: Math.min(sliderConfig.hitWidth * uiScaleState.menuBoost, sliderAreaWidth),
-        hitHeight: sliderConfig.hitHeight * uiScaleState.menuBoost,
-        toggleSize: sliderToggleSize,
-        labelFontSize: Math.round(
-          sliderConfig.labelFontSize * uiScaleState.menuBoost,
-        ),
+        rowWidth: contentWidth,
+        rowHeight,
+        toggleWidth,
+        toggleHeight,
+        labelFontSize: Math.round(12 * uiScaleState.menuBoost),
       };
-      hintToggleRow.applyLayout(toggleLayout, {
-        x: paddingX,
-        y: paddingTop + sliderGap * sliders.length,
-      });
+      hintToggleRow.applyLayout(toggleLayout, { x: 0, y: 0 });
     }
 
-    const toyPanelScale = uiScaleState.menuBoost * 0.95;
+    const toyPanelScale = uiScaleState.menuBoost;
     toysPanel.scale.set(toyPanelScale);
     toysPanelBackground.clear();
-    toysPanelBackground.beginFill(0xf4eee6, 0.95);
+    toysPanelBackground.beginFill(settingsColors.panel, 1);
+    toysPanelBackground.lineStyle(1, settingsColors.panelBorder, 1);
     toysPanelBackground.drawRoundedRect(
       0,
       0,
@@ -1109,33 +1440,42 @@ const initGame = ({ textures, gameRoot }) => {
       toyPanelLayout.radius,
     );
     toysPanelBackground.endFill();
-    ballOptionIcon.scale.set(
-      (18 / Math.max(1, ballOptionIcon.texture.width)) * 1,
-    );
-    noToyOptionIcon.scale.set(
-      (14 / Math.max(1, noToyOptionIcon.texture.width)) * 1,
-    );
-    const optionRow1Y = Math.round(toyPanelLayout.paddingY);
-    const optionRow2Y = Math.round(
-      toyPanelLayout.paddingY + toyPanelLayout.rowHeight + toyPanelLayout.rowGap,
-    );
-    ballOption.y = optionRow1Y;
-    noToyOption.y = optionRow2Y;
-    ballOptionIcon.x = Math.round(toyPanelLayout.iconX);
-    ballOptionIcon.y = Math.round(toyPanelLayout.rowHeight / 2);
-    ballOptionLabel.style.fontSize = toyPanelLayout.fontSize;
-    ballOptionLabel.x = Math.round(toyPanelLayout.labelX);
-    ballOptionLabel.y = Math.round(toyPanelLayout.rowHeight / 2);
-    ballOption.hitArea = new PIXI.Rectangle(0, 0, toyPanelLayout.width, toyPanelLayout.rowHeight);
-    noToyOptionIcon.x = Math.round(toyPanelLayout.iconX);
-    noToyOptionIcon.y = Math.round(toyPanelLayout.rowHeight / 2);
-    noToyOptionLabel.style.fontSize = toyPanelLayout.fontSize;
-    noToyOptionLabel.x = Math.round(toyPanelLayout.labelX);
-    noToyOptionLabel.y = Math.round(toyPanelLayout.rowHeight / 2);
-    noToyOption.hitArea = new PIXI.Rectangle(0, 0, toyPanelLayout.width, toyPanelLayout.rowHeight);
+    toysPanelTitle.x = toyPanelLayout.padding;
+    toysPanelTitle.y = Math.round(toyPanelLayout.padding + toyPanelLayout.titleHeight / 2);
+    const gridX = toyPanelLayout.padding;
+    const gridY = toyPanelLayout.padding + toyPanelLayout.titleHeight + toyPanelLayout.titleGap;
+    toysList.forEach((toy, index) => {
+      const tile = toyTiles.get(toy.id);
+      if (!tile) {
+        return;
+      }
+      const col = index % toyPanelLayout.columns;
+      const row = Math.floor(index / toyPanelLayout.columns);
+      tile.container.x = Math.round(
+        gridX + col * (toyPanelLayout.tileWidth + toyPanelLayout.tileGap),
+      );
+      tile.container.y = Math.round(
+        gridY + row * (toyPanelLayout.tileHeight + toyPanelLayout.tileGap),
+      );
+      tile.container.hitArea = new PIXI.Rectangle(
+        0,
+        0,
+        toyPanelLayout.tileWidth,
+        toyPanelLayout.tileHeight,
+      );
+      const iconScale =
+        toyPanelLayout.iconSize /
+        getTextureDimension(tile.icon.texture, "width", toyPanelLayout.iconSize);
+      tile.icon.scale.set(iconScale);
+      tile.icon.x = Math.round(toyPanelLayout.tileWidth / 2);
+      tile.icon.y = Math.round(toyPanelLayout.tileHeight / 2 - 6);
+      tile.label.style.fontSize = 10;
+      tile.label.x = Math.round(toyPanelLayout.tileWidth / 2);
+      tile.label.y = Math.round(toyPanelLayout.tileHeight - 10);
+    });
     uiScaleState.toyPanelWidth = toyPanelLayout.width * toyPanelScale;
     uiScaleState.toyPanelHeight = toyPanelLayout.height * toyPanelScale;
-    updateToySelection();
+    updateToyTiles();
   };
 
   const updateHintLayout = (layout) => {
@@ -1700,7 +2040,7 @@ const initGame = ({ textures, gameRoot }) => {
     optionsMenu.scale.set(menuScale);
     const menuMargin = 16;
     const menuWidth = baseMenuWidth * menuScale;
-    const menuHeight = menuLayout.height * uiScaleState.menuBoost * menuScale;
+    const menuHeight = uiScaleState.menuHeight * menuScale;
     optionsMenu.x = Math.round(
       clamp(left + menuMargin, left + 8, right - menuWidth - 8),
     );
@@ -2090,6 +2430,7 @@ const initGame = ({ textures, gameRoot }) => {
     const pointerId = getPointerId(event);
     if (sliderState.active) {
       if (sliderState.pointerId === null || sliderState.pointerId === pointerId) {
+        sliderState.active.setActive(false);
         sliderState.active = null;
         sliderState.pointerId = null;
       }
@@ -2134,6 +2475,7 @@ const initGame = ({ textures, gameRoot }) => {
     reason = "cancel",
   } = {}) => {
     if (sliderState.active) {
+      sliderState.active.setActive(false);
       sliderState.active = null;
       sliderState.pointerId = null;
     }
@@ -2243,22 +2585,6 @@ const initGame = ({ textures, gameRoot }) => {
 
   ballSprite.on("pointerup", handleBallPointerUp);
   ballSprite.on("pointerupoutside", handleBallPointerUp);
-
-  ballOption.on("pointerdown", (event) => {
-    selectedToy = "ball";
-    updateToySelection();
-    spawnBallAt(oyachi.x);
-    setToysPanelVisible(false);
-    event.stopPropagation();
-  });
-
-  noToyOption.on("pointerdown", (event) => {
-    selectedToy = "none";
-    updateToySelection();
-    disableBall();
-    setToysPanelVisible(false);
-    event.stopPropagation();
-  });
 
   const scheduleIdle = () => {
     state.idleTimer = 70 + Math.random() * 120;
