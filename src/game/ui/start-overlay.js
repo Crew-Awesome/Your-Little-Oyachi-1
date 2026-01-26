@@ -23,7 +23,6 @@ export const setupStartOverlay = ({ stage, coverTexture, playTexture, onStart })
   playIcon.roundPixels = true;
   startOverlay.addChild(coverShade, playIcon);
   stage.addChild(startOverlay);
-  console.log("overlay shown");
 
   const updateLayout = (layout) => {
     const { width, height, centerX, centerY } = layout;
@@ -57,7 +56,6 @@ export const setupStartOverlay = ({ stage, coverTexture, playTexture, onStart })
       return;
     }
     overlayClicked = true;
-    console.log("overlay clicked");
     if (event?.data?.originalEvent) {
       event.data.originalEvent.preventDefault();
     }

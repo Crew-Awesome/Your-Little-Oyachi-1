@@ -13,14 +13,6 @@ let appRef = null;
 let gameRoot = null;
 const rootStyle = document.documentElement.style;
 
-const safeLayoutCall = (handler, layout) => {
-  try {
-    handler(layout);
-  } catch (error) {
-    console.error("Layout update failed.", error);
-  }
-};
-
 const getViewportHeight = () => {
   if (window.visualViewport?.height) {
     return window.visualViewport.height;
@@ -95,5 +87,5 @@ export const applyLayoutMode = () => {
   appRef.view.style.transformOrigin = "top left";
   appRef.view.style.transform = `translate(${offsetX}px, ${offsetY}px) scale(${scale})`;
   const layout = getLayoutBounds();
-  layoutSubscribers.forEach((handler) => safeLayoutCall(handler, layout));
+  layoutSubscribers.forEach((handler) => handler(layout));
 };

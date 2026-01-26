@@ -19,14 +19,6 @@ import { getPointerId } from "../utils/pointer.js";
 import { createPixelText } from "../utils/text.js";
 import { getSafeDimension, getTextureDimension } from "../utils/texture.js";
 
-const safeLayoutCall = (handler, layout) => {
-  try {
-    handler(layout);
-  } catch (error) {
-    console.error("Layout update failed.", error);
-  }
-};
-
 const loadHintPreferences = () => {
   const storedSeen = localStorage.getItem(hintStorageKeys.seen);
   const storedEnabled = localStorage.getItem(hintStorageKeys.enabled);
@@ -1834,7 +1826,7 @@ const initGame = ({ textures, gameRoot }) => {
     updateClosetLayout(layout);
   };
 
-  safeLayoutCall(handleLayout, getLayoutBounds());
+  handleLayout(getLayoutBounds());
   const unsubscribeLayout = registerLayoutSubscriber(handleLayout);
   app.__oyachiCleanup.push(unsubscribeLayout);
 
@@ -1856,7 +1848,6 @@ const initGame = ({ textures, gameRoot }) => {
     if (!audioSystem.isLoopPlaying("petHoldMagic")) {
       return;
     }
-    console.log("LOOP_STOP", reason);
     audioSystem.stopLoop("petHoldMagic", options);
   };
 
@@ -1872,7 +1863,6 @@ const initGame = ({ textures, gameRoot }) => {
       return;
     }
     holdLoopStarted = true;
-    console.log("HOLD_START");
     startHoldLoop();
   };
 
@@ -1880,7 +1870,6 @@ const initGame = ({ textures, gameRoot }) => {
     if (audioSystem.isLoopPlaying("petHoldMagic")) {
       return;
     }
-    console.log("LOOP_START");
     void audioSystem.startLoop({
       id: "petHoldMagic",
       allowPitch: false,
@@ -1920,9 +1909,6 @@ const initGame = ({ textures, gameRoot }) => {
     state.sleepFrame = 0;
     state.sleepFrameTimer = sleepTiming.frameDuration;
     showSprite("sleep_1");
-    if (holdLoopStarted) {
-      console.log("HOLD_END", "sleep");
-    }
     resetHoldPetState({ loopOptions: { fadeOutSeconds: 0.2 }, reason: "sleep" });
   };
 
@@ -2111,9 +2097,6 @@ const initGame = ({ textures, gameRoot }) => {
     if (activePetPointerId !== null && pointerId !== activePetPointerId) {
       return;
     }
-    if (holdLoopStarted) {
-      console.log("HOLD_END", reason);
-    }
     resetHoldPetState({ loopOptions: { fadeOutSeconds: 0.2 }, reason });
   };
 
@@ -2162,9 +2145,6 @@ const initGame = ({ textures, gameRoot }) => {
       ballState.velocityY = 0;
       ballState.isAirborne = false;
       ballState.y = getBaseY(ballState.depth);
-    }
-    if (holdLoopStarted) {
-      console.log("HOLD_END", reason);
     }
     resetHoldPetState({ loopOptions, reason });
   };
@@ -2407,9 +2387,6 @@ const initGame = ({ textures, gameRoot }) => {
     state.reactTimer = petHoldTiming.ayoDuration;
     state.reactSquishTimer = 0;
     showSprite("react_ayo");
-    if (holdLoopStarted) {
-      console.log("HOLD_END", "react_ayo");
-    }
     resetHoldPetState({ loopOptions: { immediate: true }, reason: "react_ayo" });
     void audioSystem.playSfx({ id: "petOh", cooldownMs: 1000, allowPitch: false });
   };
@@ -2448,9 +2425,6 @@ const initGame = ({ textures, gameRoot }) => {
       finalLandingHeartsSpawned: false,
     };
     state.happyJumpLandingSquish = 0;
-    if (holdLoopStarted) {
-      console.log("HOLD_END", "happy_jump");
-    }
     resetHoldPetState({ loopOptions: { fadeOutSeconds: 0.2 }, reason: "happy_jump" });
     showSprite("react_cute");
   };

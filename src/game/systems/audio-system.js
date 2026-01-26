@@ -122,9 +122,6 @@ const createAudioSystem = () => {
       sfxGain.gain.setValueAtTime(gainValue, context.currentTime);
     }
     if (!sfxEnabled) {
-      if (loops.has("petHoldMagic")) {
-        console.log("LOOP_STOP", "sfx_disabled");
-      }
       stopAllLoops({ immediate: true });
     }
   };
@@ -136,9 +133,6 @@ const createAudioSystem = () => {
     const audioContext = ensureContext(allowCreate || unlocked);
     if (!audioContext) {
       return null;
-    }
-    if (key.includes("petHoldMagic")) {
-      console.log("HOLD_LOOP_LOAD", key);
     }
     try {
       const response = await fetch(src);

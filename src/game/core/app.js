@@ -88,7 +88,6 @@ export const createApp = ({ root, audioSystem } = {}) => {
   gameRoot.appendChild(app.view);
   app.view.setAttribute("aria-label", "Your little Oyachi canvas");
   app.stage.sortableChildren = true;
-  console.log("pixi mounted");
 
   const contextLossState = {
     lost: false,
