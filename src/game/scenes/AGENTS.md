@@ -58,7 +58,7 @@ export const createMainScene = ({ textures, gameRoot }) => initGame({ textures, 
 
 6. **Input Handling**:
    - Petting: quick tap vs hold detection
-   - Ball: drag and throw
+   - Ball: drag to slide, tap to throw, Oyachi can return tosses
    - Sliders: volume/settings controls
    - Multi-touch via `getPointerId()`
 

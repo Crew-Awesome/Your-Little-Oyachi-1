@@ -307,10 +307,16 @@ const initGame = ({ textures, gameRoot }) => {
     careUiState.height = baseHeight * careUiState.scale;
     careUiState.cornerRadius = 4 * careUiState.scale;
     careUiState.labelGap = 10 * careUiState.scale;
-    const careX = layout.left + 14 * marginScale;
-    const careY = layout.top + 52 * marginScale;
-    careUiState.x = Math.round(careX);
-    careUiState.y = Math.round(careY);
+    const settingsHalf = getIconHalfSize(settingsButton.icon);
+    const targetX = settingsButton.container.x - settingsHalf.width;
+    const targetY =
+      settingsButton.container.y + settingsHalf.height + 8 * marginScale + careUiState.labelGap;
+    const minX = layout.left + 8;
+    const maxX = layout.right - 8 - careUiState.width;
+    const minY = layout.top + 8 + careUiState.labelGap;
+    const maxY = layout.bottom - 8 - careUiState.height;
+    careUiState.x = Math.round(clamp(targetX, minX, maxX));
+    careUiState.y = Math.round(clamp(targetY, minY, maxY));
     careOverlay.x = careUiState.x;
     careOverlay.y = careUiState.y;
     careLabel.style.fontSize = Math.round(10 * careUiState.scale);
@@ -1923,6 +1929,9 @@ const initGame = ({ textures, gameRoot }) => {
     tossSpeed: 620,
     tossLift: 26,
     tossPush: 180,
+    playerTossSpeed: 720,
+    playerTossLift: 30,
+    playerTossPush: 220,
     spinFromVelocity: 0.012,
     spinDamping: 0.9,
     idleWobbleSpeed: 2.6,
@@ -1953,6 +1962,8 @@ const initGame = ({ textures, gameRoot }) => {
     idleTimer: 0,
     wobble: 0,
     squish: 0,
+    lastThrowAt: 0,
+    lastThrowDirection: 0,
   };
 
   const toyInteraction = {
@@ -2139,6 +2150,8 @@ const initGame = ({ textures, gameRoot }) => {
     ballState.idleTimer = 0;
     ballState.wobble = 0;
     ballState.squish = 0;
+    ballState.lastThrowAt = 0;
+    ballState.lastThrowDirection = 0;
     ballState.x = clampBallX(xPosition ?? (roomLeft + roomRight) / 2);
     ballState.y = getBaseY(ballState.depth);
     ballSprite.visible = true;
@@ -2216,7 +2229,6 @@ const initGame = ({ textures, gameRoot }) => {
     const { left, right, top, bottom, scale, centerX, width } = layout;
     applyUiScale(layout);
     updateNowPlayingLayout(layout);
-    updateCareUiLayout(layout);
     const marginScale = uiScaleState.compact ? 1.1 : 1;
     const settingsHalf = getIconHalfSize(settingsButton.icon);
     const fullscreenHalf = getIconHalfSize(fullscreenButton.icon);
@@ -2241,6 +2253,7 @@ const initGame = ({ textures, gameRoot }) => {
     const gearMargin = 24 * marginScale;
     settingsButton.container.x = Math.round(clamp(left + gearMargin, safeLeft, safeRight));
     settingsButton.container.y = Math.round(clamp(top + gearMargin, safeTop, safeBottom));
+    updateCareUiLayout(layout);
     const fullscreenMargin = 24 * marginScale;
     fullscreenButton.container.x = Math.round(clamp(right - fullscreenMargin, safeLeft, safeRight));
     fullscreenButton.container.y = Math.round(clamp(top + fullscreenMargin, safeTop, safeBottom));
@@ -2670,14 +2683,23 @@ const initGame = ({ textures, gameRoot }) => {
         event?.data?.global ??
         (event?.clientX !== undefined ? mapPointerEventToGlobal(event) : null);
       const pointerX = pointerGlobal?.x ?? ballState.x;
-      const direction = pointerX < ballState.x ? 1 : -1;
-      ballState.velocityX = 80 * direction;
+      const towardOyachi = oyachi.x >= ballState.x ? 1 : -1;
+      const direction = Math.abs(pointerX - ballState.x) < 10 ? towardOyachi : pointerX < ballState.x ? 1 : -1;
+      ballState.isHidden = false;
+      ballState.isAirborne = true;
+      ballState.bounceCount = 0;
+      ballState.velocityY = -ballConfig.playerTossSpeed;
+      ballState.velocityX = ballConfig.playerTossPush * direction;
+      ballState.y =
+        getBaseY(ballState.depth) - ballConfig.playerTossLift * getDepthScale(ballState.depth);
+      ballState.lastThrowAt = now;
+      ballState.lastThrowDirection = direction;
     } else {
       ballState.velocityX = clamp(speed, -240, 240);
+      ballState.velocityY = 0;
+      ballState.isAirborne = false;
+      ballState.y = getBaseY(ballState.depth);
     }
-    ballState.velocityY = 0;
-    ballState.isAirborne = false;
-    ballState.y = getBaseY(ballState.depth);
   };
 
   const cancelPointerInteractions = ({
@@ -3275,7 +3297,12 @@ const initGame = ({ textures, gameRoot }) => {
           setSpriteOverride(null);
           ballState.x = clampBallX(oyachi.x);
           ballState.depth = state.depth;
-          tossBall(state.moveDirection || 1);
+          const now = performance.now();
+          const returnThrow =
+            now - ballState.lastThrowAt < 5000 && ballState.lastThrowDirection !== 0
+              ? -ballState.lastThrowDirection
+              : 0;
+          tossBall(returnThrow || state.moveDirection || 1);
           toyInteraction.phase = "cooldown";
           toyInteraction.timer = 3 + Math.random() * 4;
           if (Math.random() < 0.4) {
@@ -3331,6 +3358,7 @@ const initGame = ({ textures, gameRoot }) => {
     }
 
     if (ballState.active) {
+      const wasAirborne = ballState.isAirborne;
       if (!ballState.dragging) {
         const baseBallY = getBaseY(ballState.depth);
         if (ballState.isAirborne) {
@@ -3383,6 +3411,20 @@ const initGame = ({ textures, gameRoot }) => {
         }
       }
       updateBallSprite();
+      if (wasAirborne && !ballState.isAirborne) {
+        const justThrown = performance.now() - ballState.lastThrowAt < 4500;
+        if (
+          justThrown &&
+          toyInteraction.phase === "idle" &&
+          state.current === "idle" &&
+          !ballState.isHidden
+        ) {
+          toyInteraction.phase = "approach";
+          scheduleMoveTo(ballState.x);
+        } else if (justThrown) {
+          toyInteraction.timer = Math.min(toyInteraction.timer, 0.8);
+        }
+      }
       if (
         state.current === "sleep" &&
         !ballState.isHidden &&
