@@ -27,7 +27,7 @@ const loadHintPreferences = () => {
   return { seen, enabled };
 };
 
-const state = {
+  const state = {
   current: "idle",
   timer: 0,
   idleTimer: 0,
@@ -39,8 +39,9 @@ const state = {
   inactiveTime: 0,
   tiredTimer: 0,
   sneezeTimer: 0,
-  sleepFrame: 0,
-  sleepFrameTimer: 0,
+    sleepFrame: 0,
+    sleepFrameTimer: 0,
+    sleepTimer: 0,
   wakeTimer: 0,
   reactTimer: 0,
   moveTargetX: null,
@@ -228,6 +229,22 @@ const initGame = ({ textures, gameRoot }) => {
   careOverlay.addChild(careBarBg, careBarFill, careLabel);
   uiLayer.addChild(careOverlay);
 
+  const toastOverlay = new PIXI.Container();
+  toastOverlay.zIndex = 43;
+  toastOverlay.roundPixels = true;
+  toastOverlay.visible = false;
+  toastOverlay.eventMode = "none";
+  const toastBg = new PIXI.Graphics();
+  const toastText = createPixelText("", {
+    fontSize: 12,
+    fill: 0x111111,
+    align: "center",
+  });
+  toastText.anchor.set(0.5, 0.5);
+  toastText.roundPixels = true;
+  toastOverlay.addChild(toastBg, toastText);
+  uiLayer.addChild(toastOverlay);
+
   const hintPreferences = loadHintPreferences();
   let hintsSeen = hintPreferences.seen;
   let hintsEnabled = hintPreferences.enabled;
@@ -285,6 +302,26 @@ const initGame = ({ textures, gameRoot }) => {
     labelGap: 10,
     scale: 1,
   };
+  const toastState = {
+    phase: "hidden",
+    timer: 0,
+    offset: 0,
+  };
+  const toastTiming = {
+    fadeIn: 0.2,
+    hold: 1.6,
+    fadeOut: 0.35,
+  };
+  const toastLayout = {
+    x: GAME_W / 2,
+    y: 84,
+    maxWidth: 220,
+    paddingX: 10,
+    paddingY: 6,
+    radius: 6,
+    slideDistance: 10,
+    scale: 1,
+  };
   const updateNowPlayingLayout = (layout) => {
     nowPlayingLayout.x = layout.left + 16;
     nowPlayingLayout.y = layout.bottom - 14;
@@ -322,6 +359,23 @@ const initGame = ({ textures, gameRoot }) => {
     careLabel.style.fontSize = Math.round(10 * careUiState.scale);
     careLabel.x = 0;
     careLabel.y = 0;
+  };
+  const updateToastLayout = (layout) => {
+    toastLayout.scale = clamp(0.9 / layout.scale, 1, 1.25);
+    toastLayout.x = Math.round(layout.centerX);
+    toastLayout.y = Math.round(layout.top + 72 * toastLayout.scale);
+    toastLayout.maxWidth = Math.max(160, Math.min(260, layout.width - 32));
+    toastLayout.paddingX = Math.round(10 * toastLayout.scale);
+    toastLayout.paddingY = Math.round(6 * toastLayout.scale);
+    toastLayout.radius = Math.round(6 * toastLayout.scale);
+    toastLayout.slideDistance = 10 * toastLayout.scale;
+    toastText.style.fontSize = Math.round(12 * toastLayout.scale);
+    toastText.scale.set(1);
+    if (toastText.text) {
+      const maxTextWidth = Math.max(1, toastLayout.maxWidth - toastLayout.paddingX * 2);
+      const textScale = Math.min(1, maxTextWidth / Math.max(1, toastText.width));
+      toastText.scale.set(textScale);
+    }
   };
   const hideNowPlaying = () => {
     if (nowPlayingState.phase === "hidden") {
@@ -386,6 +440,36 @@ const initGame = ({ textures, gameRoot }) => {
     careBarFill.endFill();
     careLabel.x = 0;
     careLabel.y = -careUiState.labelGap;
+  };
+
+  const showToast = (text) => {
+    const message = String(text ?? "").trim();
+    if (!message) {
+      return;
+    }
+    toastText.text = message;
+    updateToastLayout(getLayoutBounds());
+    toastOverlay.visible = true;
+    toastOverlay.alpha = 0;
+    toastState.phase = "fadein";
+    toastState.timer = 0;
+    toastState.offset = toastLayout.slideDistance;
+  };
+
+  const updateToastUi = () => {
+    if (toastState.phase === "hidden") {
+      return;
+    }
+    const width = Math.max(1, toastText.width) + toastLayout.paddingX * 2;
+    const height = Math.max(1, toastText.height) + toastLayout.paddingY * 2;
+    toastBg.clear();
+    toastBg.beginFill(0xf4eee6, 0.96);
+    toastBg.drawRoundedRect(-width / 2, -height / 2, width, height, toastLayout.radius);
+    toastBg.endFill();
+    toastBg.lineStyle(1, 0x836f5a, 0.32);
+    toastBg.drawRoundedRect(-width / 2, -height / 2, width, height, toastLayout.radius);
+    toastOverlay.x = toastLayout.x;
+    toastOverlay.y = toastLayout.y + toastState.offset;
   };
 
   const hintConfig = {
@@ -1880,6 +1964,11 @@ const initGame = ({ textures, gameRoot }) => {
     offsetX: 0,
     rotation: 0,
   };
+  const idleTiltState = {
+    timer: 0,
+    target: 0,
+    current: 0,
+  };
   const jumpMicroState = {
     phase: Math.random() * Math.PI * 2,
     offset: 0,
@@ -1917,6 +2006,10 @@ const initGame = ({ textures, gameRoot }) => {
     streakCount: 0,
     lowPrompted: false,
     criticalPrompted: false,
+  };
+
+  const moodState = {
+    idleHeartTimer: 0,
   };
 
   const ballConfig = {
@@ -1970,6 +2063,11 @@ const initGame = ({ textures, gameRoot }) => {
     phase: "idle",
     timer: 4,
   };
+  const toyCatchState = {
+    count: 0,
+    lastCatchAt: 0,
+  };
+  const toyCatchMilestones = new Set([3, 5, 10]);
 
   let ballInteractionLocked = false;
   const isBallHeld = () => toyInteraction.phase === "hold";
@@ -2229,6 +2327,7 @@ const initGame = ({ textures, gameRoot }) => {
     const { left, right, top, bottom, scale, centerX, width } = layout;
     applyUiScale(layout);
     updateNowPlayingLayout(layout);
+    updateToastLayout(layout);
     const marginScale = uiScaleState.compact ? 1.1 : 1;
     const settingsHalf = getIconHalfSize(settingsButton.icon);
     const fullscreenHalf = getIconHalfSize(fullscreenButton.icon);
@@ -2466,10 +2565,18 @@ const initGame = ({ textures, gameRoot }) => {
     }
   };
 
+  const resetToyCatchIfStale = (now) => {
+    if (now - toyCatchState.lastCatchAt > 12000) {
+      toyCatchState.count = 0;
+      toyCatchState.lastCatchAt = 0;
+    }
+  };
+
   const startSleep = () => {
     setState("sleep");
     state.sleepFrame = 0;
     state.sleepFrameTimer = sleepTiming.frameDuration;
+    state.sleepTimer = 0;
     showSprite("sleep_1");
     resetHoldPetState({ loopOptions: { fadeOutSeconds: 0.2 }, reason: "sleep" });
   };
@@ -2565,6 +2672,9 @@ const initGame = ({ textures, gameRoot }) => {
     if (petSpamCount >= petSpamTiming.requiredCount) {
       petSpamCount = 0;
       showHint("spam", { priority: true });
+      for (let i = 0; i < 3; i += 1) {
+        spawnHeart("excited", { force: true, ignoreCooldown: true });
+      }
       if (now - lastHappyJumpAt >= 3200 && state.current !== "happy_jump_sequence") {
         lastHappyJumpAt = now;
         startHappyJumpSequence();
@@ -3046,6 +3156,38 @@ const initGame = ({ textures, gameRoot }) => {
       nowPlayingText.y = nowPlayingLayout.y;
     }
 
+    if (toastState.phase !== "hidden") {
+      toastState.timer += deltaSeconds;
+      if (toastState.phase === "fadein") {
+        const t = clamp(toastState.timer / toastTiming.fadeIn, 0, 1);
+        const eased = easeOutCubic(t);
+        toastState.offset = toastLayout.slideDistance * (1 - eased);
+        toastOverlay.alpha = eased;
+        if (t >= 1) {
+          toastState.phase = "hold";
+          toastState.timer = 0;
+        }
+      } else if (toastState.phase === "hold") {
+        toastState.offset = 0;
+        toastOverlay.alpha = 1;
+        if (toastState.timer >= toastTiming.hold) {
+          toastState.phase = "fadeout";
+          toastState.timer = 0;
+        }
+      } else if (toastState.phase === "fadeout") {
+        const t = clamp(toastState.timer / toastTiming.fadeOut, 0, 1);
+        const eased = easeInCubic(t);
+        toastState.offset = -toastLayout.slideDistance * eased;
+        toastOverlay.alpha = 1 - eased;
+        if (t >= 1) {
+          toastState.phase = "hidden";
+          toastOverlay.alpha = 0;
+          toastOverlay.visible = false;
+        }
+      }
+      updateToastUi();
+    }
+
     careState.value = clamp(
       careState.value - careConfig.decayPerSecond * deltaSeconds,
       careConfig.min,
@@ -3083,6 +3225,7 @@ const initGame = ({ textures, gameRoot }) => {
         for (let i = 0; i < 2; i += 1) {
           spawnHeart("excited", { force: true, ignoreCooldown: true });
         }
+        showToast(`Care streak +${careState.streakCount}`);
       }
     } else {
       careState.streakTimer = 0;
@@ -3144,10 +3287,12 @@ const initGame = ({ textures, gameRoot }) => {
     }
 
     const idleChance = Math.random();
+    const moodRatio = careState.value / Math.max(1, careConfig.max);
     if (state.current === "idle") {
       state.idleTimer -= delta;
       if (state.idleTimer <= 0) {
-        if (state.inactiveTime >= idleBehavior.tiredDelay) {
+        const tiredDelay = idleBehavior.tiredDelay * (moodRatio < 0.4 ? 0.8 : 1);
+        if (state.inactiveTime >= tiredDelay) {
           setState("idle_tired");
           state.tiredTimer = idleBehavior.sleepDelay;
           showSprite("idle_tired");
@@ -3162,6 +3307,15 @@ const initGame = ({ textures, gameRoot }) => {
           scheduleMove();
         }
       }
+    }
+    if (state.current === "idle" && moodRatio > 0.75) {
+      moodState.idleHeartTimer -= deltaSeconds;
+      if (moodState.idleHeartTimer <= 0) {
+        spawnHeart("gentle");
+        moodState.idleHeartTimer = 6 + Math.random() * 8;
+      }
+    } else if (moodRatio <= 0.6) {
+      moodState.idleHeartTimer = 0;
     }
 
     if (state.current === "idle_tired") {
@@ -3240,13 +3394,30 @@ const initGame = ({ textures, gameRoot }) => {
     }
 
     if (state.current === "sleep") {
+      state.sleepTimer += deltaSeconds;
+      const frameDuration =
+        sleepTiming.frameDuration * (state.sleepTimer > 8 ? 1.6 : 1);
       state.sleepFrameTimer -= deltaSeconds;
       if (state.sleepFrameTimer <= 0) {
         state.sleepFrame = state.sleepFrame === 0 ? 1 : 0;
-        state.sleepFrameTimer = sleepTiming.frameDuration;
+        state.sleepFrameTimer = frameDuration;
         showSprite(state.sleepFrame === 0 ? "sleep_1" : "sleep_2");
       }
     }
+
+    const idleTiltActive =
+      state.current === "idle" && !petHoldActive && !ballState.dragging && !closetOpen;
+    if (idleTiltActive) {
+      idleTiltState.timer -= deltaSeconds;
+      if (idleTiltState.timer <= 0) {
+        idleTiltState.target = (Math.random() * 2 - 1) * 0.06;
+        idleTiltState.timer = 1.8 + Math.random() * 2.8;
+      }
+    } else {
+      idleTiltState.target = 0;
+      idleTiltState.timer = 0.4;
+    }
+    idleTiltState.current += (idleTiltState.target - idleTiltState.current) * 0.08;
 
     if (state.current === "wake") {
       state.wakeTimer -= deltaSeconds;
@@ -3285,6 +3456,18 @@ const initGame = ({ textures, gameRoot }) => {
           toyInteraction.timer = 0.35 + Math.random() * 0.15;
           setSpriteOverride("hold_ball");
           hideBall();
+          const now = performance.now();
+          resetToyCatchIfStale(now);
+          if (now - ballState.lastThrowAt < 5200) {
+            toyCatchState.count += 1;
+            toyCatchState.lastCatchAt = now;
+            if (toyCatchMilestones.has(toyCatchState.count)) {
+              showToast(`Catch x${toyCatchState.count}!`);
+              for (let i = 0; i < 2; i += 1) {
+                spawnHeart("excited", { force: true, ignoreCooldown: true });
+              }
+            }
+          }
         }
         if (ballState.dragging || ballState.isAirborne) {
           toyInteraction.phase = "idle";
@@ -3302,6 +3485,9 @@ const initGame = ({ textures, gameRoot }) => {
             now - ballState.lastThrowAt < 5000 && ballState.lastThrowDirection !== 0
               ? -ballState.lastThrowDirection
               : 0;
+          if (returnThrow) {
+            spawnHeart("gentle");
+          }
           tossBall(returnThrow || state.moveDirection || 1);
           toyInteraction.phase = "cooldown";
           toyInteraction.timer = 2 + Math.random() * 2.5;
@@ -3529,9 +3715,9 @@ const initGame = ({ textures, gameRoot }) => {
       idleSwayState.phase += ((Math.PI * 2) / 7.5) * deltaSeconds;
     }
     const swayTargetX = swayActive ? Math.sin(idleSwayState.phase) * 2.2 : 0;
-    const swayTargetRotation = swayActive
-      ? Math.sin(idleSwayState.phase + Math.PI / 2) * 0.025
-      : 0;
+    const swayTargetRotation =
+      (swayActive ? Math.sin(idleSwayState.phase + Math.PI / 2) * 0.025 : 0) +
+      idleTiltState.current;
     idleSwayState.offsetX += (swayTargetX - idleSwayState.offsetX) * 0.08;
     idleSwayState.rotation += (swayTargetRotation - idleSwayState.rotation) * 0.08;
 
@@ -3688,6 +3874,25 @@ const initGame = ({ textures, gameRoot }) => {
   });
   stage.on("pointerdown", (event) => {
     if (!optionsMenu.visible) {
+      if (!gameStarted || closetOpen) {
+        return;
+      }
+      if (event?.target && event.target !== stage) {
+        return;
+      }
+      if (ballState.dragging || petHoldActive || sliderState.active || isBallHeld()) {
+        return;
+      }
+      if (state.current === "sleep") {
+        wakeFromSleep();
+        return;
+      }
+      const global = event?.data?.global;
+      if (!global) {
+        return;
+      }
+      scheduleMoveTo(global.x);
+      registerActivity();
       return;
     }
     const global = event.data.global;

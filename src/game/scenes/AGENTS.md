@@ -60,6 +60,7 @@ export const createMainScene = ({ textures, gameRoot }) => initGame({ textures, 
 6. **Input Handling**:
    - Petting: quick tap vs hold detection
    - Ball: drag to slide, tap to throw, Oyachi can return tosses
+   - Floor tap: Oyachi walks toward the tap
    - Sliders: volume/settings controls
    - Multi-touch via `getPointerId()`
 
@@ -76,7 +77,7 @@ export const createMainScene = ({ textures, gameRoot }) => initGame({ textures, 
 8. **Main Ticker Loop**:
    - Updates every frame (~60fps)
    - Handles all animations, physics, state transitions
-   - Updates UI (hints, now-playing, care bar, spotlight)
+   - Updates UI (hints, now-playing, care bar, toast popups, spotlight)
 
 9. **Care System**:
    - Single care meter (0-100) decays over time
