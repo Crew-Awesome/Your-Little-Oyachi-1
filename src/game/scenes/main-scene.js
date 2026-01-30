@@ -2566,7 +2566,7 @@ const initGame = ({ textures, gameRoot }) => {
   };
 
   const resetToyCatchIfStale = (now) => {
-    if (now - toyCatchState.lastCatchAt > 12000) {
+    if (now - toyCatchState.lastCatchAt > 18000) {
       toyCatchState.count = 0;
       toyCatchState.lastCatchAt = 0;
     }
@@ -3439,7 +3439,7 @@ const initGame = ({ textures, gameRoot }) => {
             !ballState.isHidden
           ) {
             toyInteraction.phase = "approach";
-            scheduleMoveTo(ballState.x);
+            scheduleMoveTo(ballState.x, ballState.depth);
           } else {
             toyInteraction.timer = 2 + Math.random() * 3;
           }
@@ -3450,7 +3450,7 @@ const initGame = ({ textures, gameRoot }) => {
           !ballState.isAirborne &&
           !ballState.dragging &&
           !ballState.isHidden &&
-          Math.abs(oyachi.x - ballState.x) < 14
+          Math.abs(oyachi.x - ballState.x) < 18
         ) {
           toyInteraction.phase = "hold";
           toyInteraction.timer = 0.35 + Math.random() * 0.15;
@@ -3458,7 +3458,7 @@ const initGame = ({ textures, gameRoot }) => {
           hideBall();
           const now = performance.now();
           resetToyCatchIfStale(now);
-          if (now - ballState.lastThrowAt < 5200) {
+          if (now - ballState.lastThrowAt < 8000) {
             toyCatchState.count += 1;
             toyCatchState.lastCatchAt = now;
             if (toyCatchMilestones.has(toyCatchState.count)) {
@@ -3607,7 +3607,7 @@ const initGame = ({ textures, gameRoot }) => {
           state.current !== "sleep"
         ) {
           toyInteraction.phase = "approach";
-          scheduleMoveTo(ballState.x);
+          scheduleMoveTo(ballState.x, ballState.depth);
         } else if (justThrown) {
           toyInteraction.timer = Math.min(toyInteraction.timer, 0.35);
         }
