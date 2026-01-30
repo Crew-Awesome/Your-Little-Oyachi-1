@@ -212,6 +212,22 @@ const initGame = ({ textures, gameRoot }) => {
   nowPlayingText.eventMode = "none";
   uiLayer.addChild(nowPlayingText);
 
+  const careOverlay = new PIXI.Container();
+  careOverlay.zIndex = 42;
+  careOverlay.roundPixels = true;
+  careOverlay.visible = false;
+  const careBarBg = new PIXI.Graphics();
+  const careBarFill = new PIXI.Graphics();
+  const careLabel = createPixelText("Care", {
+    fontSize: 10,
+    fill: 0x111111,
+    align: "left",
+  });
+  careLabel.anchor.set(0, 0.5);
+  careLabel.roundPixels = true;
+  careOverlay.addChild(careBarBg, careBarFill, careLabel);
+  uiLayer.addChild(careOverlay);
+
   const hintPreferences = loadHintPreferences();
   let hintsSeen = hintPreferences.seen;
   let hintsEnabled = hintPreferences.enabled;
@@ -260,6 +276,15 @@ const initGame = ({ textures, gameRoot }) => {
     baseAlpha: 0.5,
     slideDistance: 12,
   };
+  const careUiState = {
+    x: 16,
+    y: 56,
+    width: 120,
+    height: 8,
+    cornerRadius: 4,
+    labelGap: 10,
+    scale: 1,
+  };
   const updateNowPlayingLayout = (layout) => {
     nowPlayingLayout.x = layout.left + 16;
     nowPlayingLayout.y = layout.bottom - 14;
@@ -272,6 +297,25 @@ const initGame = ({ textures, gameRoot }) => {
       const textScale = Math.min(1, maxTextWidth / Math.max(1, nowPlayingText.width));
       nowPlayingText.scale.set(textScale);
     }
+  };
+  const updateCareUiLayout = (layout) => {
+    const marginScale = uiScaleState.compact ? 1.1 : 1;
+    const baseWidth = 120;
+    const baseHeight = 8;
+    careUiState.scale = clamp(0.9 / layout.scale, 1, 1.35);
+    careUiState.width = baseWidth * careUiState.scale;
+    careUiState.height = baseHeight * careUiState.scale;
+    careUiState.cornerRadius = 4 * careUiState.scale;
+    careUiState.labelGap = 10 * careUiState.scale;
+    const careX = layout.left + 14 * marginScale;
+    const careY = layout.top + 52 * marginScale;
+    careUiState.x = Math.round(careX);
+    careUiState.y = Math.round(careY);
+    careOverlay.x = careUiState.x;
+    careOverlay.y = careUiState.y;
+    careLabel.style.fontSize = Math.round(10 * careUiState.scale);
+    careLabel.x = 0;
+    careLabel.y = 0;
   };
   const hideNowPlaying = () => {
     if (nowPlayingState.phase === "hidden") {
@@ -302,6 +346,42 @@ const initGame = ({ textures, gameRoot }) => {
     nowPlayingState.timer = 0;
   };
 
+  const getCareColor = (ratio) => {
+    if (ratio >= 0.7) {
+      return 0x7fbf74;
+    }
+    if (ratio >= 0.4) {
+      return 0xd8b45a;
+    }
+    return 0xcf7a62;
+  };
+
+  const updateCareUi = () => {
+    const ratio = clamp(
+      (careState.value - careConfig.min) / Math.max(1, careConfig.max - careConfig.min),
+      0,
+      1,
+    );
+    const width = careUiState.width;
+    const height = careUiState.height;
+    const radius = careUiState.cornerRadius;
+    const barY = 0;
+    const fillWidth = Math.max(2, width * ratio);
+    const fillRadius = Math.min(radius, fillWidth / 2);
+    careBarBg.clear();
+    careBarBg.beginFill(0xf4eee6, 0.9);
+    careBarBg.drawRoundedRect(0, barY, width, height, radius);
+    careBarBg.endFill();
+    careBarBg.lineStyle(1, 0x836f5a, 0.35);
+    careBarBg.drawRoundedRect(0, barY, width, height, radius);
+    careBarFill.clear();
+    careBarFill.beginFill(getCareColor(ratio), 0.95);
+    careBarFill.drawRoundedRect(0, barY, fillWidth, height, fillRadius);
+    careBarFill.endFill();
+    careLabel.x = 0;
+    careLabel.y = -careUiState.labelGap;
+  };
+
   const hintConfig = {
     pet: { text: "Tap Oyachi to pet", cooldownMs: 20000, chance: 0.75 },
     hold: { text: "Keep holding to pet", cooldownMs: 24000, chance: 0.6 },
@@ -310,6 +390,7 @@ const initGame = ({ textures, gameRoot }) => {
     costumes: { text: "Tap costumes to dress Oyachi", cooldownMs: 30000, chance: 0.6 },
     fullscreen: { text: "Tap fullscreen for a bigger view", cooldownMs: 32000, chance: 0.55 },
     settings: { text: "Settings are in the corner", cooldownMs: 32000, chance: 0.55 },
+    attention: { text: "Oyachi wants attention", cooldownMs: 26000, chance: 1 },
     test: { text: "Hint test: Oyachi is listening.", cooldownMs: 0, chance: 1 },
   };
 
@@ -1812,6 +1893,26 @@ const initGame = ({ textures, gameRoot }) => {
     release: 0.2,
   };
 
+  const careConfig = {
+    max: 100,
+    min: 0,
+    decayPerSecond: 0.9,
+    petBoost: 6,
+    playBoostPerSecond: 4.5,
+    lowThreshold: 38,
+    criticalThreshold: 20,
+    streakThreshold: 72,
+    streakSeconds: 120,
+  };
+
+  const careState = {
+    value: careConfig.max,
+    streakTimer: 0,
+    streakCount: 0,
+    lowPrompted: false,
+    criticalPrompted: false,
+  };
+
   const ballConfig = {
     gravity: 1600,
     bounceDamping: 0.55,
@@ -1869,6 +1970,13 @@ const initGame = ({ textures, gameRoot }) => {
     ballInteractionLocked = holding;
     ballSprite.eventMode = holding ? "none" : "static";
     ballSprite.cursor = holding ? "default" : "pointer";
+  };
+
+  const addCare = (amount) => {
+    if (!Number.isFinite(amount) || amount <= 0) {
+      return;
+    }
+    careState.value = clamp(careState.value + amount, careConfig.min, careConfig.max);
   };
 
   const createHeartGraphic = () => {
@@ -2108,6 +2216,7 @@ const initGame = ({ textures, gameRoot }) => {
     const { left, right, top, bottom, scale, centerX, width } = layout;
     applyUiScale(layout);
     updateNowPlayingLayout(layout);
+    updateCareUiLayout(layout);
     const marginScale = uiScaleState.compact ? 1.1 : 1;
     const settingsHalf = getIconHalfSize(settingsButton.icon);
     const fullscreenHalf = getIconHalfSize(fullscreenButton.icon);
@@ -2423,6 +2532,7 @@ const initGame = ({ textures, gameRoot }) => {
       petType = "gentle";
     }
     spawnHeart(petType, { force: true });
+    addCare(careConfig.petBoost);
     if (activeHearts.length === 0) {
       const baseY = getBaseY(state.depth);
       forceSpawnHeartAt(oyachi.x, Math.min(baseY - 40, baseY - 1));
@@ -2913,6 +3023,50 @@ const initGame = ({ textures, gameRoot }) => {
       nowPlayingText.x = nowPlayingLayout.x + nowPlayingState.slide;
       nowPlayingText.y = nowPlayingLayout.y;
     }
+
+    careState.value = clamp(
+      careState.value - careConfig.decayPerSecond * deltaSeconds,
+      careConfig.min,
+      careConfig.max,
+    );
+    const isPlayingToy =
+      ballState.active &&
+      (ballState.dragging ||
+        ballState.isAirborne ||
+        Math.abs(ballState.velocityX) > 20);
+    if (isPlayingToy) {
+      addCare(careConfig.playBoostPerSecond * deltaSeconds);
+    }
+    if (careState.value <= careConfig.criticalThreshold) {
+      if (!careState.criticalPrompted) {
+        showHint("attention", { priority: true });
+        careState.criticalPrompted = true;
+      }
+    } else if (careState.value > careConfig.criticalThreshold + 8) {
+      careState.criticalPrompted = false;
+    }
+    if (careState.value <= careConfig.lowThreshold) {
+      if (!careState.lowPrompted) {
+        showHint("attention");
+        careState.lowPrompted = true;
+      }
+    } else if (careState.value > careConfig.lowThreshold + 10) {
+      careState.lowPrompted = false;
+    }
+    if (careState.value >= careConfig.streakThreshold) {
+      careState.streakTimer += deltaSeconds;
+      if (careState.streakTimer >= careConfig.streakSeconds) {
+        careState.streakTimer = 0;
+        careState.streakCount += 1;
+        for (let i = 0; i < 2; i += 1) {
+          spawnHeart("excited", { force: true, ignoreCooldown: true });
+        }
+      }
+    } else {
+      careState.streakTimer = 0;
+    }
+    updateCareUi();
+
     updateHint(deltaSeconds);
     if (closetOpen) {
       closetSpotlightState.timer += deltaSeconds;
@@ -2922,7 +3076,12 @@ const initGame = ({ textures, gameRoot }) => {
     }
     state.timer = Math.max(state.timer - delta, 0);
     if (state.current !== "sleep") {
-      state.inactiveTime += deltaSeconds;
+      const careFatigue =
+        careState.value <= careConfig.lowThreshold
+          ? 1 +
+            ((careConfig.lowThreshold - careState.value) / careConfig.lowThreshold) * 1.2
+          : 1;
+      state.inactiveTime += deltaSeconds * careFatigue;
     }
 
     if (petHoldActive && state.current !== "happy_jump_sequence") {
@@ -3537,6 +3696,9 @@ const initGame = ({ textures, gameRoot }) => {
         return;
       }
       gameStarted = true;
+      careOverlay.visible = true;
+      updateCareUiLayout(getLayoutBounds());
+      updateCareUi();
       const now = performance.now();
       markHintsSeen();
       if (hintsEnabled) {

@@ -24,6 +24,7 @@ AI agents must keep AGENTS.md files continuously updated whenever they change co
 - **`scenes/main-scene.js`**: Complete game logic (3116 lines)
   - All Oyachi states and behaviors
   - Ball physics and interaction
+  - Care system (single meter, prompts, streak)
   - Input handling (petting, dragging)
   - UI overlay management (hints, settings, toys, closet)
   - Main game loop via `app.ticker.add()`

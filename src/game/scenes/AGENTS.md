@@ -75,7 +75,13 @@ export const createMainScene = ({ textures, gameRoot }) => initGame({ textures, 
 8. **Main Ticker Loop**:
    - Updates every frame (~60fps)
    - Handles all animations, physics, state transitions
-   - Updates UI (hints, now-playing, spotlight)
+   - Updates UI (hints, now-playing, care bar, spotlight)
+
+9. **Care System**:
+   - Single care meter (0-100) decays over time
+   - Petting and ball play refill care
+   - Low care accelerates tiredness and triggers attention hints
+   - Session streak rewards when care stays high
 
 ## State Machine Details
 
