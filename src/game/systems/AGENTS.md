@@ -61,6 +61,7 @@ playSfx({
 - `preloadInitialMusic(onProgress)`: Load first music track
 - `loadMusicBuffers(onProgress)`: Load remaining tracks
 - `setNowPlayingHandler(handler)`: Callback for track title
+- Shuffle avoids recently played tracks (keeps a short history)
 
 **Audio Files Structure** (internal):
 ```javascript

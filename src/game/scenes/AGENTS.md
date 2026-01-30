@@ -52,6 +52,7 @@ export const createMainScene = ({ textures, gameRoot }) => initGame({ textures, 
 
 5. **Physics**:
    - Ball physics: gravity (1600), bounce damping (0.55), ground friction (0.95)
+   - Ball visuals: spin, idle wobble, and bounce squish derived from movement
    - Depth-based scaling: `getDepthScale(depth)` returns 0.84-1.1
    - Pseudo-3D positioning via depth parameter
 

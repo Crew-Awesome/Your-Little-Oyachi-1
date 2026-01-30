@@ -246,11 +246,40 @@ const initGame = ({ textures, gameRoot }) => {
   const nowPlayingState = {
     phase: "hidden",
     timer: 0,
+    slide: 0,
   };
   const nowPlayingTiming = {
     fadeIn: 0.4,
     hold: 2.4,
     fadeOut: 0.6,
+  };
+  const nowPlayingLayout = {
+    x: 16,
+    y: GAME_H - 14,
+    maxWidth: 320,
+    baseAlpha: 0.5,
+    slideDistance: 12,
+  };
+  const updateNowPlayingLayout = (layout) => {
+    nowPlayingLayout.x = layout.left + 16;
+    nowPlayingLayout.y = layout.bottom - 14;
+    nowPlayingLayout.maxWidth = Math.max(160, Math.min(360, layout.width - 24));
+    nowPlayingLayout.slideDistance = 12 * uiScaleState.scale;
+    nowPlayingText.style.fontSize = Math.round(12 * uiScaleState.scale);
+    nowPlayingText.scale.set(1);
+    if (nowPlayingText.text) {
+      const maxTextWidth = Math.max(1, nowPlayingLayout.maxWidth - 8);
+      const textScale = Math.min(1, maxTextWidth / Math.max(1, nowPlayingText.width));
+      nowPlayingText.scale.set(textScale);
+    }
+  };
+  const hideNowPlaying = () => {
+    if (nowPlayingState.phase === "hidden") {
+      nowPlayingText.alpha = 0;
+      return;
+    }
+    nowPlayingState.phase = "fadeout";
+    nowPlayingState.timer = 0;
   };
   const hintTiming = {
     fadeIn: 0.2,
@@ -261,8 +290,14 @@ const initGame = ({ textures, gameRoot }) => {
   const hintAlpha = 1;
 
   const showNowPlaying = (title) => {
-    nowPlayingText.text = `Now playing: ${title}`;
+    const trimmed = String(title ?? "").trim();
+    if (!trimmed) {
+      hideNowPlaying();
+      return;
+    }
+    nowPlayingText.text = `Now playing: ${trimmed}`;
     nowPlayingText.alpha = 0;
+    updateNowPlayingLayout(getLayoutBounds());
     nowPlayingState.phase = "fadein";
     nowPlayingState.timer = 0;
   };
@@ -1787,6 +1822,12 @@ const initGame = ({ textures, gameRoot }) => {
     tossSpeed: 620,
     tossLift: 26,
     tossPush: 180,
+    spinFromVelocity: 0.012,
+    spinDamping: 0.9,
+    idleWobbleSpeed: 2.6,
+    idleWobbleAmount: 0.04,
+    bounceSquish: 0.12,
+    squishDecay: 2.8,
   };
 
   const ballState = {
@@ -1806,6 +1847,11 @@ const initGame = ({ textures, gameRoot }) => {
     dragStartY: 0,
     dragMoved: false,
     isHidden: false,
+    spin: 0,
+    spinVelocity: 0,
+    idleTimer: 0,
+    wobble: 0,
+    squish: 0,
   };
 
   const toyInteraction = {
@@ -1980,6 +2026,11 @@ const initGame = ({ textures, gameRoot }) => {
     ballState.velocityY = 0;
     ballState.bounceCount = 0;
     ballState.isHidden = false;
+    ballState.spin = 0;
+    ballState.spinVelocity = 0;
+    ballState.idleTimer = 0;
+    ballState.wobble = 0;
+    ballState.squish = 0;
     ballState.x = clampBallX(xPosition ?? (roomLeft + roomRight) / 2);
     ballState.y = getBaseY(ballState.depth);
     ballSprite.visible = true;
@@ -1994,6 +2045,9 @@ const initGame = ({ textures, gameRoot }) => {
     ballState.isAirborne = false;
     ballState.velocityX = 0;
     ballState.velocityY = 0;
+    ballState.spinVelocity = 0;
+    ballState.wobble = 0;
+    ballState.squish = 0;
     ballSprite.visible = false;
     clearBallHoldState();
   };
@@ -2017,7 +2071,14 @@ const initGame = ({ textures, gameRoot }) => {
   const updateBallSprite = () => {
     ballSprite.x = ballState.x;
     ballSprite.y = ballState.y;
-    ballSprite.scale.set(ballConfig.baseScale * getDepthScale(ballState.depth));
+    const depthScale = getDepthScale(ballState.depth);
+    const baseScale = ballConfig.baseScale * depthScale;
+    const wobble = ballState.wobble;
+    const squish = ballState.squish;
+    const scaleX = baseScale * (1 + wobble + squish * 0.4);
+    const scaleY = baseScale * (1 - wobble - squish);
+    ballSprite.scale.set(scaleX, scaleY);
+    ballSprite.rotation = ballState.spin;
     ballSprite.visible = ballState.active && !ballState.isHidden;
   };
 
@@ -2046,8 +2107,7 @@ const initGame = ({ textures, gameRoot }) => {
   const updateUiLayout = (layout) => {
     const { left, right, top, bottom, scale, centerX, width } = layout;
     applyUiScale(layout);
-    nowPlayingText.x = left + 16;
-    nowPlayingText.y = bottom - 14;
+    updateNowPlayingLayout(layout);
     const marginScale = uiScaleState.compact ? 1.1 : 1;
     const settingsHalf = getIconHalfSize(settingsButton.icon);
     const fullscreenHalf = getIconHalfSize(fullscreenButton.icon);
@@ -2826,25 +2886,32 @@ const initGame = ({ textures, gameRoot }) => {
       nowPlayingState.timer += deltaSeconds;
       if (nowPlayingState.phase === "fadein") {
         const t = clamp(nowPlayingState.timer / nowPlayingTiming.fadeIn, 0, 1);
-        nowPlayingText.alpha = 0.4 * t;
+        const eased = easeOutCubic(t);
+        nowPlayingState.slide = -nowPlayingLayout.slideDistance * (1 - eased);
+        nowPlayingText.alpha = nowPlayingLayout.baseAlpha * eased;
         if (t >= 1) {
           nowPlayingState.phase = "hold";
           nowPlayingState.timer = 0;
         }
       } else if (nowPlayingState.phase === "hold") {
-        nowPlayingText.alpha = 0.4;
+        nowPlayingState.slide = 0;
+        nowPlayingText.alpha = nowPlayingLayout.baseAlpha;
         if (nowPlayingState.timer >= nowPlayingTiming.hold) {
           nowPlayingState.phase = "fadeout";
           nowPlayingState.timer = 0;
         }
       } else if (nowPlayingState.phase === "fadeout") {
         const t = clamp(nowPlayingState.timer / nowPlayingTiming.fadeOut, 0, 1);
-        nowPlayingText.alpha = 0.4 * (1 - t);
+        const eased = easeInCubic(t);
+        nowPlayingState.slide = -nowPlayingLayout.slideDistance * eased;
+        nowPlayingText.alpha = nowPlayingLayout.baseAlpha * (1 - eased);
         if (t >= 1) {
           nowPlayingState.phase = "hidden";
           nowPlayingText.alpha = 0;
         }
       }
+      nowPlayingText.x = nowPlayingLayout.x + nowPlayingState.slide;
+      nowPlayingText.y = nowPlayingLayout.y;
     }
     updateHint(deltaSeconds);
     if (closetOpen) {
@@ -3118,6 +3185,7 @@ const initGame = ({ textures, gameRoot }) => {
             ) {
               ballState.velocityY = -ballState.velocityY * ballConfig.bounceDamping;
               ballState.bounceCount += 1;
+              ballState.squish = Math.min(0.2, ballState.squish + ballConfig.bounceSquish);
             } else {
               ballState.velocityY = 0;
               ballState.isAirborne = false;
@@ -3134,6 +3202,25 @@ const initGame = ({ textures, gameRoot }) => {
           if (Math.abs(ballState.velocityX) < 2) {
             ballState.velocityX = 0;
           }
+        }
+        const targetSpin = ballState.velocityX * ballConfig.spinFromVelocity;
+        if (ballState.isAirborne) {
+          ballState.spinVelocity *= ballConfig.spinDamping;
+        } else {
+          ballState.spinVelocity += (targetSpin - ballState.spinVelocity) * 0.12;
+        }
+        ballState.spin += ballState.spinVelocity * deltaSeconds;
+        if (!ballState.isAirborne && Math.abs(ballState.velocityX) < 2) {
+          ballState.idleTimer += deltaSeconds;
+          ballState.wobble =
+            Math.sin(ballState.idleTimer * ballConfig.idleWobbleSpeed) *
+            ballConfig.idleWobbleAmount;
+        } else {
+          ballState.idleTimer = 0;
+          ballState.wobble *= 0.9;
+        }
+        if (ballState.squish > 0) {
+          ballState.squish = Math.max(0, ballState.squish - deltaSeconds * ballConfig.squishDecay);
         }
       }
       updateBallSprite();

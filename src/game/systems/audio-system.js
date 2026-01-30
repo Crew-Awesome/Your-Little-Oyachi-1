@@ -47,6 +47,7 @@ const createAudioSystem = () => {
   let musicLoadingPromise = null;
   let currentMusicIndex = -1;
   let lastMusicIndex = -1;
+  const recentMusicIndices = [];
   let currentMusicToken = 0;
   let currentMusicSource = null;
   let onNowPlaying = null;
@@ -393,6 +394,24 @@ const createAudioSystem = () => {
     return initialMusicIndex;
   };
 
+  const getRecentMusicLimit = () =>
+    Math.min(3, Math.max(1, musicTracks.length - 1));
+
+  const rememberRecentTrack = (index) => {
+    if (!Number.isFinite(index) || index < 0) {
+      return;
+    }
+    const existing = recentMusicIndices.indexOf(index);
+    if (existing !== -1) {
+      recentMusicIndices.splice(existing, 1);
+    }
+    recentMusicIndices.push(index);
+    const maxRecent = getRecentMusicLimit();
+    while (recentMusicIndices.length > maxRecent) {
+      recentMusicIndices.shift();
+    }
+  };
+
   const preloadInitialMusic = async (onProgress) => {
     const reportProgress = (progress, label, src) => {
       if (typeof onProgress === "function") {
@@ -463,6 +482,7 @@ const createAudioSystem = () => {
     source.start();
     currentMusicIndex = index;
     lastMusicIndex = index;
+    rememberRecentTrack(index);
     if (typeof onNowPlaying === "function") {
       onNowPlaying(track.title);
     }
@@ -475,13 +495,28 @@ const createAudioSystem = () => {
     if (musicTracks.length === 0) {
       return;
     }
-    let nextIndex =
-      currentMusicIndex === -1
-        ? selectInitialTrack()
-        : Math.floor(Math.random() * musicTracks.length);
-    if (musicTracks.length > 1 && nextIndex === lastMusicIndex) {
-      nextIndex = (nextIndex + 1) % musicTracks.length;
+    if (musicTracks.length === 1) {
+      playMusicTrack(0);
+      return;
     }
+    const maxRecent = getRecentMusicLimit();
+    const recentSet = new Set(recentMusicIndices.slice(-maxRecent));
+    let candidates = [];
+    for (let i = 0; i < musicTracks.length; i += 1) {
+      if (!recentSet.has(i)) {
+        candidates.push(i);
+      }
+    }
+    if (candidates.length === 0) {
+      candidates = Array.from({ length: musicTracks.length }, (_, index) => index).filter(
+        (index) => index !== lastMusicIndex,
+      );
+    }
+    if (candidates.length === 0) {
+      playMusicTrack(selectInitialTrack());
+      return;
+    }
+    const nextIndex = candidates[Math.floor(Math.random() * candidates.length)];
     playMusicTrack(nextIndex);
   };
 
