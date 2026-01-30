@@ -100,10 +100,10 @@ export const audioPitchConfig = {
 **Pet Hold:**
 - `gentleDelayMs`: 350ms before cute hearts start
 - `ayoDelayMs`: 4200ms before react_ayo state
-- `ayoDuration`: 0.9s for ayo reaction
+- `ayoDuration`: 0.45s for ayo reaction
 - `cuteHeartInterval`: 0.6s between hearts
 - `cuteSquishSpeed`: 1.1 squish animation speed
-- `ayoSquishSpeed`: 2.1 faster squish for ayo
+- `ayoSquishSpeed`: 1.4 faster squish for ayo
 
 **Pet Spam Detection:**
 - `quickWindowMs`: 260ms window for quick pets

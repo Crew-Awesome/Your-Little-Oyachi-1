@@ -117,7 +117,7 @@ const initGame = ({ textures, gameRoot }) => {
   const sleepSprite1 = new PIXI.Sprite(textures.sleep_1);
   const sleepSprite2 = new PIXI.Sprite(textures.sleep_2);
   const reactCuteSprite = new PIXI.Sprite(textures.react_cute);
-  const reactAyoSprite = new PIXI.Sprite(textures.react_ayo);
+  const reactAyoSprite = new PIXI.Sprite(textures.blink);
   const baseSpriteScaleDefault = 0.6;
   let baseSpriteScale = baseSpriteScaleDefault;
   const baseSpriteSize = {
@@ -3270,7 +3270,7 @@ const initGame = ({ textures, gameRoot }) => {
             toyInteraction.phase = "approach";
             scheduleMoveTo(ballState.x);
           } else {
-            toyInteraction.timer = 3 + Math.random() * 4;
+            toyInteraction.timer = 2 + Math.random() * 3;
           }
         }
       } else if (toyInteraction.phase === "approach") {
@@ -3304,7 +3304,7 @@ const initGame = ({ textures, gameRoot }) => {
               : 0;
           tossBall(returnThrow || state.moveDirection || 1);
           toyInteraction.phase = "cooldown";
-          toyInteraction.timer = 3 + Math.random() * 4;
+          toyInteraction.timer = 2 + Math.random() * 2.5;
           if (Math.random() < 0.4) {
             scheduleMove();
           }
@@ -3415,14 +3415,15 @@ const initGame = ({ textures, gameRoot }) => {
         const justThrown = performance.now() - ballState.lastThrowAt < 4500;
         if (
           justThrown &&
-          toyInteraction.phase === "idle" &&
-          state.current === "idle" &&
-          !ballState.isHidden
+          !ballState.isHidden &&
+          !ballState.dragging &&
+          toyInteraction.phase !== "hold" &&
+          state.current !== "sleep"
         ) {
           toyInteraction.phase = "approach";
           scheduleMoveTo(ballState.x);
         } else if (justThrown) {
-          toyInteraction.timer = Math.min(toyInteraction.timer, 0.8);
+          toyInteraction.timer = Math.min(toyInteraction.timer, 0.35);
         }
       }
       if (

@@ -16,10 +16,10 @@ export const wakeTiming = {
 export const petHoldTiming = {
   gentleDelayMs: 350,
   ayoDelayMs: 4200,
-  ayoDuration: 0.9,
+  ayoDuration: 0.45,
   cuteHeartInterval: 0.6,
   cuteSquishSpeed: 1.1,
-  ayoSquishSpeed: 2.1,
+  ayoSquishSpeed: 1.4,
 };
 
 export const petSpamTiming = {
