@@ -27,6 +27,7 @@ AI agents must keep AGENTS.md files continuously updated whenever they change co
   - Care system (single meter, prompts, streak)
   - Toast popups (care streak, catch milestones)
   - Affection/throw rhythm tweaks for returning play
+  - Daily greeting ritual (stored in localStorage)
   - Input handling (petting, dragging)
   - UI overlay management (hints, settings, toys, closet)
   - Main game loop via `app.ticker.add()`

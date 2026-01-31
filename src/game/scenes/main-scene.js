@@ -1,5 +1,5 @@
 import { GAME_H, GAME_W, GAME_WIDTH } from "../config/constants.js";
-import { audioStorageKeys, hintStorageKeys } from "../config/storage.js";
+import { audioStorageKeys, hintStorageKeys, ritualStorageKeys } from "../config/storage.js";
 import {
   happyJumpTiming,
   idleBehavior,
@@ -455,6 +455,8 @@ const initGame = ({ textures, gameRoot }) => {
     toastState.timer = 0;
     toastState.offset = toastLayout.slideDistance;
   };
+
+  const getTodayKey = () => new Date().toISOString().slice(0, 10);
 
   const updateToastUi = () => {
     if (toastState.phase === "hidden") {
@@ -4056,6 +4058,15 @@ const initGame = ({ textures, gameRoot }) => {
       updateCareUi();
       const now = performance.now();
       markHintsSeen();
+      const todayKey = getTodayKey();
+      const lastGreetingDay = localStorage.getItem(ritualStorageKeys.lastGreetingDay);
+      if (todayKey && todayKey !== lastGreetingDay) {
+        localStorage.setItem(ritualStorageKeys.lastGreetingDay, todayKey);
+        showToast("Hi again, I missed you");
+        for (let i = 0; i < 3; i += 1) {
+          spawnHeart("gentle", { force: true, ignoreCooldown: true });
+        }
+      }
       if (hintsEnabled) {
         hintState.nextAllowedAt = now + 1800;
         seedHints();

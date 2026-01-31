@@ -159,6 +159,10 @@ export const hintStorageKeys = {
   seen: "oyachi_hints_seen",
   enabled: "oyachi_hints_enabled",
 };
+
+export const ritualStorageKeys = {
+  lastGreetingDay: "oyachi_last_greeting_day",
+};
 ```
 
 **Usage:** Imported where persistence is needed
