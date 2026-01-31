@@ -366,6 +366,11 @@ const initGame = ({ textures, gameRoot }) => {
   const careSparkleState = {
     timer: 0,
   };
+  const careBarState = {
+    energy: 1,
+    comfort: 1,
+    fun: 1,
+  };
   const toastState = {
     phase: "hidden",
     timer: 0,
@@ -527,8 +532,11 @@ const initGame = ({ textures, gameRoot }) => {
       comfort: comfortRatio,
       fun: funRatio,
     };
+    careBarState.energy += (ratios.energy - careBarState.energy) * 0.12;
+    careBarState.comfort += (ratios.comfort - careBarState.comfort) * 0.12;
+    careBarState.fun += (ratios.fun - careBarState.fun) * 0.12;
     careBars.forEach((bar) => {
-      const barRatio = ratios[bar.id] ?? ratio;
+      const barRatio = clamp(careBarState[bar.id] ?? ratios[bar.id] ?? ratio, 0, 1);
       const fillWidth = Math.max(2, width * barRatio);
       const fillRadius = Math.min(radius, fillWidth / 2);
       bar.bg.clear();
