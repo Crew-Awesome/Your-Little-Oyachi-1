@@ -225,8 +225,6 @@ const initGame = ({ textures, gameRoot }) => {
   careOverlay.zIndex = 42;
   careOverlay.roundPixels = true;
   careOverlay.visible = false;
-  const careBarBg = new PIXI.Graphics();
-  const careBarFill = new PIXI.Graphics();
   const careLabel = createPixelText("Care", {
     fontSize: 10,
     fill: 0x111111,
@@ -244,8 +242,16 @@ const initGame = ({ textures, gameRoot }) => {
   careSparkle.anchor.set(0.5, 0.5);
   careSparkle.visible = false;
   careSparkle.alpha = 0;
-  careOverlay.addChild(careBarBg, careBarFill, careLabel);
-  careOverlay.addChild(careIconComfort, careIconFun, careIconEnergy, careSparkle);
+  const careBars = [
+    { id: "energy", icon: careIconEnergy, bg: new PIXI.Graphics(), fill: new PIXI.Graphics() },
+    { id: "comfort", icon: careIconComfort, bg: new PIXI.Graphics(), fill: new PIXI.Graphics() },
+    { id: "fun", icon: careIconFun, bg: new PIXI.Graphics(), fill: new PIXI.Graphics() },
+  ];
+  careOverlay.addChild(careLabel);
+  careBars.forEach((bar) => {
+    careOverlay.addChild(bar.bg, bar.fill, bar.icon);
+  });
+  careOverlay.addChild(careSparkle);
   uiLayer.addChild(careOverlay);
 
   const toastOverlay = new PIXI.Container();
@@ -315,8 +321,10 @@ const initGame = ({ textures, gameRoot }) => {
   const careUiState = {
     x: 16,
     y: 56,
-    width: 120,
-    height: 8,
+    width: 140,
+    height: 10,
+    totalWidth: 160,
+    barGap: 6,
     cornerRadius: 4,
     labelGap: 10,
     scale: 1,
@@ -359,21 +367,28 @@ const initGame = ({ textures, gameRoot }) => {
   };
   const updateCareUiLayout = (layout) => {
     const marginScale = uiScaleState.compact ? 1.1 : 1;
-    const baseWidth = 120;
-    const baseHeight = 8;
+    const baseWidth = 140;
+    const baseHeight = 10;
+    const baseGap = 6;
     careUiState.scale = clamp(0.9 / layout.scale, 1, 1.35);
     careUiState.width = baseWidth * careUiState.scale;
     careUiState.height = baseHeight * careUiState.scale;
+    careUiState.barGap = baseGap * careUiState.scale;
     careUiState.cornerRadius = 4 * careUiState.scale;
     careUiState.labelGap = 10 * careUiState.scale;
     const settingsHalf = getIconHalfSize(settingsButton.icon);
     const targetX = settingsButton.container.x - settingsHalf.width;
     const targetY =
       settingsButton.container.y + settingsHalf.height + 8 * marginScale + careUiState.labelGap;
+    const iconSize = 14 * careUiState.scale;
+    const iconGap = 6 * careUiState.scale;
+    careUiState.totalWidth = careUiState.width + iconSize + iconGap;
+    const totalHeight =
+      careUiState.height * careBars.length + careUiState.barGap * (careBars.length - 1);
     const minX = layout.left + 8;
-    const maxX = layout.right - 8 - careUiState.width;
+    const maxX = layout.right - 8 - careUiState.totalWidth;
     const minY = layout.top + 8 + careUiState.labelGap;
-    const maxY = layout.bottom - 8 - careUiState.height;
+    const maxY = layout.bottom - 8 - totalHeight;
     careUiState.x = Math.round(clamp(targetX, minX, maxX));
     careUiState.y = Math.round(clamp(targetY, minY, maxY));
     careOverlay.x = careUiState.x;
@@ -381,20 +396,20 @@ const initGame = ({ textures, gameRoot }) => {
     careLabel.style.fontSize = Math.round(10 * careUiState.scale);
     careLabel.x = 0;
     careLabel.y = 0;
-    const iconSize = 12 * careUiState.scale;
-    [careIconComfort, careIconFun, careIconEnergy, careSparkle].forEach((icon) => {
-      icon.scale.set(iconSize / Math.max(1, icon.texture.width));
+    careBars.forEach((bar, index) => {
+      const barY = index * (careUiState.height + careUiState.barGap);
+      const barX = iconSize + iconGap;
+      bar.icon.scale.set(iconSize / Math.max(1, bar.icon.texture.width));
+      bar.icon.x = iconSize * 0.5;
+      bar.icon.y = barY + careUiState.height / 2;
+      bar.bg.x = barX;
+      bar.bg.y = barY;
+      bar.fill.x = barX;
+      bar.fill.y = barY;
     });
-    const iconY = careUiState.height + careUiState.labelGap + iconSize * 0.15;
-    const iconGap = iconSize + 6 * careUiState.scale;
-    careIconComfort.x = iconSize * 0.5;
-    careIconComfort.y = iconY;
-    careIconFun.x = careIconComfort.x + iconGap;
-    careIconFun.y = iconY;
-    careIconEnergy.x = careIconFun.x + iconGap;
-    careIconEnergy.y = iconY;
-    careSparkle.x = careIconEnergy.x + iconGap;
-    careSparkle.y = iconY;
+    careSparkle.scale.set(iconSize / Math.max(1, careSparkle.texture.width));
+    careSparkle.x = careUiState.totalWidth - iconSize * 0.5;
+    careSparkle.y = careUiState.height / 2;
   };
   const updateToastLayout = (layout) => {
     toastLayout.scale = clamp(0.9 / layout.scale, 1, 1.25);
@@ -463,27 +478,35 @@ const initGame = ({ textures, gameRoot }) => {
       (ballState.dragging ||
         ballState.isAirborne ||
         Math.abs(ballState.velocityX) > 20);
+    const energyRatio = clamp(ratio + (state.current === "sleep" ? 0.1 : 0), 0, 1);
+    const comfortRatio = clamp(ratio + (petHoldActive ? 0.12 : 0), 0, 1);
+    const funRatio = clamp(ratio + (isPlayingToy ? 0.16 : -0.04), 0, 1);
     const width = careUiState.width;
     const height = careUiState.height;
     const radius = careUiState.cornerRadius;
-    const barY = 0;
-    const fillWidth = Math.max(2, width * ratio);
-    const fillRadius = Math.min(radius, fillWidth / 2);
-    careBarBg.clear();
-    careBarBg.beginFill(0xf4eee6, 0.9);
-    careBarBg.drawRoundedRect(0, barY, width, height, radius);
-    careBarBg.endFill();
-    careBarBg.lineStyle(1, 0x836f5a, 0.35);
-    careBarBg.drawRoundedRect(0, barY, width, height, radius);
-    careBarFill.clear();
-    careBarFill.beginFill(getCareColor(ratio), 0.95);
-    careBarFill.drawRoundedRect(0, barY, fillWidth, height, fillRadius);
-    careBarFill.endFill();
+    const ratios = {
+      energy: energyRatio,
+      comfort: comfortRatio,
+      fun: funRatio,
+    };
+    careBars.forEach((bar) => {
+      const barRatio = ratios[bar.id] ?? ratio;
+      const fillWidth = Math.max(2, width * barRatio);
+      const fillRadius = Math.min(radius, fillWidth / 2);
+      bar.bg.clear();
+      bar.bg.beginFill(0xf4eee6, 0.9);
+      bar.bg.drawRoundedRect(0, 0, width, height, radius);
+      bar.bg.endFill();
+      bar.bg.lineStyle(1, 0x836f5a, 0.35);
+      bar.bg.drawRoundedRect(0, 0, width, height, radius);
+      bar.fill.clear();
+      bar.fill.beginFill(getCareColor(barRatio), 0.95);
+      bar.fill.drawRoundedRect(0, 0, fillWidth, height, fillRadius);
+      bar.fill.endFill();
+      bar.icon.alpha = 0.4 + barRatio * 0.6;
+    });
     careLabel.x = 0;
     careLabel.y = -careUiState.labelGap;
-    careIconComfort.alpha = 0.9;
-    careIconFun.alpha = isPlayingToy ? 0.95 : 0.35;
-    careIconEnergy.alpha = ratio > 0.5 ? 0.85 : 0.45;
     if (careSparkleState.timer > 0) {
       careSparkle.visible = true;
       careSparkle.alpha = Math.min(1, careSparkleState.timer / 0.6);

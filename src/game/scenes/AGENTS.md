@@ -85,6 +85,7 @@ export const createMainScene = ({ textures, gameRoot }) => initGame({ textures, 
    - Petting and ball play refill care
    - Low care accelerates tiredness and triggers attention hints
    - Session streak rewards when care stays high
+   - UI shows stacked Energy/Comfort/Fun bars with icons
 
 10. **No-asset Fun Loops**:
    - Ball nudges when idle to invite play
