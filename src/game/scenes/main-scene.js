@@ -236,6 +236,27 @@ const initGame = ({ textures, gameRoot }) => {
   const careIconFun = new PIXI.Sprite(textures.ui_fun);
   const careIconEnergy = new PIXI.Sprite(textures.ui_energy);
   const careSparkle = new PIXI.Sprite(textures.ui_sparkle);
+  const careTextEnergy = createPixelText("Energy", {
+    fontSize: 9,
+    fill: 0x111111,
+    align: "left",
+  });
+  const careTextComfort = createPixelText("Comfort", {
+    fontSize: 9,
+    fill: 0x111111,
+    align: "left",
+  });
+  const careTextFun = createPixelText("Fun", {
+    fontSize: 9,
+    fill: 0x111111,
+    align: "left",
+  });
+  careTextEnergy.anchor.set(0, 0.5);
+  careTextComfort.anchor.set(0, 0.5);
+  careTextFun.anchor.set(0, 0.5);
+  careTextEnergy.roundPixels = true;
+  careTextComfort.roundPixels = true;
+  careTextFun.roundPixels = true;
   careIconComfort.anchor.set(0.5, 0.5);
   careIconFun.anchor.set(0.5, 0.5);
   careIconEnergy.anchor.set(0.5, 0.5);
@@ -243,13 +264,25 @@ const initGame = ({ textures, gameRoot }) => {
   careSparkle.visible = false;
   careSparkle.alpha = 0;
   const careBars = [
-    { id: "energy", icon: careIconEnergy, bg: new PIXI.Graphics(), fill: new PIXI.Graphics() },
-    { id: "comfort", icon: careIconComfort, bg: new PIXI.Graphics(), fill: new PIXI.Graphics() },
-    { id: "fun", icon: careIconFun, bg: new PIXI.Graphics(), fill: new PIXI.Graphics() },
+    {
+      id: "energy",
+      icon: careIconEnergy,
+      label: careTextEnergy,
+      bg: new PIXI.Graphics(),
+      fill: new PIXI.Graphics(),
+    },
+    {
+      id: "comfort",
+      icon: careIconComfort,
+      label: careTextComfort,
+      bg: new PIXI.Graphics(),
+      fill: new PIXI.Graphics(),
+    },
+    { id: "fun", icon: careIconFun, label: careTextFun, bg: new PIXI.Graphics(), fill: new PIXI.Graphics() },
   ];
   careOverlay.addChild(careLabel);
   careBars.forEach((bar) => {
-    careOverlay.addChild(bar.bg, bar.fill, bar.icon);
+    careOverlay.addChild(bar.bg, bar.fill, bar.icon, bar.label);
   });
   careOverlay.addChild(careSparkle);
   uiLayer.addChild(careOverlay);
@@ -324,9 +357,10 @@ const initGame = ({ textures, gameRoot }) => {
     width: 140,
     height: 10,
     totalWidth: 160,
-    barGap: 6,
+    barGap: 10,
     cornerRadius: 4,
     labelGap: 10,
+    labelOffset: 16,
     scale: 1,
   };
   const careSparkleState = {
@@ -369,17 +403,18 @@ const initGame = ({ textures, gameRoot }) => {
     const marginScale = uiScaleState.compact ? 1.1 : 1;
     const baseWidth = 140;
     const baseHeight = 10;
-    const baseGap = 6;
+    const baseGap = 10;
     careUiState.scale = clamp(0.9 / layout.scale, 1, 1.35);
     careUiState.width = baseWidth * careUiState.scale;
     careUiState.height = baseHeight * careUiState.scale;
     careUiState.barGap = baseGap * careUiState.scale;
     careUiState.cornerRadius = 4 * careUiState.scale;
     careUiState.labelGap = 10 * careUiState.scale;
+    careUiState.labelOffset = 16 * careUiState.scale;
     const settingsHalf = getIconHalfSize(settingsButton.icon);
     const targetX = settingsButton.container.x - settingsHalf.width;
     const targetY =
-      settingsButton.container.y + settingsHalf.height + 8 * marginScale + careUiState.labelGap;
+      settingsButton.container.y + settingsHalf.height + 18 * marginScale + careUiState.labelGap;
     const iconSize = 14 * careUiState.scale;
     const iconGap = 6 * careUiState.scale;
     careUiState.totalWidth = careUiState.width + iconSize + iconGap;
@@ -402,6 +437,9 @@ const initGame = ({ textures, gameRoot }) => {
       bar.icon.scale.set(iconSize / Math.max(1, bar.icon.texture.width));
       bar.icon.x = iconSize * 0.5;
       bar.icon.y = barY + careUiState.height / 2;
+      bar.label.style.fontSize = Math.round(9 * careUiState.scale);
+      bar.label.x = barX + careUiState.labelOffset;
+      bar.label.y = barY + careUiState.height / 2;
       bar.bg.x = barX;
       bar.bg.y = barY;
       bar.fill.x = barX;
@@ -506,7 +544,7 @@ const initGame = ({ textures, gameRoot }) => {
       bar.icon.alpha = 0.4 + barRatio * 0.6;
     });
     careLabel.x = 0;
-    careLabel.y = -careUiState.labelGap;
+    careLabel.y = -careUiState.labelGap - 6 * careUiState.scale;
     if (careSparkleState.timer > 0) {
       careSparkle.visible = true;
       careSparkle.alpha = Math.min(1, careSparkleState.timer / 0.6);
