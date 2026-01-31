@@ -44,7 +44,8 @@ export const createMainScene = ({ textures, gameRoot }) => initGame({ textures, 
    - Pre-created sprites: `idleSprite`, `blinkSprite`, `petSprite`, `holdBallSprite`, `tiredSprite`, `sneezeSprite`, `sleepSprite1`, `sleepSprite2`, `reactCuteSprite`, `reactAyoSprite`
    - Visibility toggled via `setSpriteVisibility(name)`
    - All sprites share `baseSpriteScale` (0.6)
-   - `react_ayo` uses the blink texture for a quick surprised reaction
+   - `react_ayo` uses `react_surprised` for a quick surprised reaction
+   - `react_stretch` used on wake, `react_shy` used for bestie streaks
 
 4. **Room Rendering**:
    - `drawRoom()`: Draws wall, floor, floorMat, seam

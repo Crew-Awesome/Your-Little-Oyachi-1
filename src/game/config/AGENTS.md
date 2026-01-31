@@ -36,6 +36,10 @@ export const coverArtAsset = {/* Start screen cover image */};
 { alias: "my_new_sprite", src: "assets/images/characters/oyachi/my_new_sprite.png" }
 ```
 
+**Recent Additions:**
+- `ui_sparkle`, `ui_fun`, `ui_energy`, `ui_comfort`
+- `react_stretch`, `react_shy_smile`
+
 ### `constants.js`
 **Purpose:** Game dimension constants
 

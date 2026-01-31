@@ -8,6 +8,10 @@ export const uiAssets = [
   { alias: "ui_play", src: "assets/images/ui/arrowrightcartoon.png" },
   { alias: "ui_check", src: "assets/images/ui/check.png" },
   { alias: "ui_heart", src: "assets/images/ui/heart.png" },
+  { alias: "ui_sparkle", src: "assets/images/ui/ui_sparkle.png" },
+  { alias: "ui_fun", src: "assets/images/ui/ui_fun.png" },
+  { alias: "ui_energy", src: "assets/images/ui/ui_energy.png" },
+  { alias: "ui_comfort", src: "assets/images/ui/ui_comfort.png" },
 ];
 
 export const fontAssets = [
@@ -25,6 +29,8 @@ export const gameAssets = [
   { alias: "sleep_2", src: "assets/images/characters/oyachi/base/sleep_idle_2.png" },
   { alias: "react_cute", src: "assets/images/characters/oyachi/base/react_excited_cute.png" },
   { alias: "react_ayo", src: "assets/images/characters/oyachi/base/react_excited_ayo.png" },
+  { alias: "react_stretch", src: "assets/images/characters/oyachi/base/react_stretch.png" },
+  { alias: "react_shy_smile", src: "assets/images/characters/oyachi/base/react_shy_smile.png" },
   { alias: "ball", src: "assets/images/toys/ball.png" },
 ];
 

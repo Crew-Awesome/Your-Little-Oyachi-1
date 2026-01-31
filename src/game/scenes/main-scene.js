@@ -118,7 +118,9 @@ const initGame = ({ textures, gameRoot }) => {
   const sleepSprite1 = new PIXI.Sprite(textures.sleep_1);
   const sleepSprite2 = new PIXI.Sprite(textures.sleep_2);
   const reactCuteSprite = new PIXI.Sprite(textures.react_cute);
-  const reactAyoSprite = new PIXI.Sprite(textures.blink);
+  const reactAyoSprite = new PIXI.Sprite(textures.react_surprised);
+  const reactStretchSprite = new PIXI.Sprite(textures.react_stretch);
+  const reactShySprite = new PIXI.Sprite(textures.react_shy_smile);
   const baseSpriteScaleDefault = 0.6;
   let baseSpriteScale = baseSpriteScaleDefault;
   const baseSpriteSize = {
@@ -146,6 +148,8 @@ const initGame = ({ textures, gameRoot }) => {
     { sprite: sleepSprite2, name: "sleep_2" },
     { sprite: reactCuteSprite, name: "react_cute" },
     { sprite: reactAyoSprite, name: "react_ayo" },
+    { sprite: reactStretchSprite, name: "react_stretch" },
+    { sprite: reactShySprite, name: "react_shy" },
   ];
 
   const applySpriteAnchor = (sprite, name) => {
@@ -177,6 +181,8 @@ const initGame = ({ textures, gameRoot }) => {
   sleepSprite2.visible = false;
   reactCuteSprite.visible = false;
   reactAyoSprite.visible = false;
+  reactStretchSprite.visible = false;
+  reactShySprite.visible = false;
 
   oyachiVisual.addChild(
     idleSprite,
@@ -188,7 +194,9 @@ const initGame = ({ textures, gameRoot }) => {
     sleepSprite1,
     sleepSprite2,
     reactCuteSprite,
-    reactAyoSprite
+    reactAyoSprite,
+    reactStretchSprite,
+    reactShySprite
   );
   oyachi.addChild(oyachiVisual);
   stage.addChild(oyachi);
@@ -226,7 +234,18 @@ const initGame = ({ textures, gameRoot }) => {
   });
   careLabel.anchor.set(0, 0.5);
   careLabel.roundPixels = true;
+  const careIconComfort = new PIXI.Sprite(textures.ui_comfort);
+  const careIconFun = new PIXI.Sprite(textures.ui_fun);
+  const careIconEnergy = new PIXI.Sprite(textures.ui_energy);
+  const careSparkle = new PIXI.Sprite(textures.ui_sparkle);
+  careIconComfort.anchor.set(0.5, 0.5);
+  careIconFun.anchor.set(0.5, 0.5);
+  careIconEnergy.anchor.set(0.5, 0.5);
+  careSparkle.anchor.set(0.5, 0.5);
+  careSparkle.visible = false;
+  careSparkle.alpha = 0;
   careOverlay.addChild(careBarBg, careBarFill, careLabel);
+  careOverlay.addChild(careIconComfort, careIconFun, careIconEnergy, careSparkle);
   uiLayer.addChild(careOverlay);
 
   const toastOverlay = new PIXI.Container();
@@ -302,6 +321,9 @@ const initGame = ({ textures, gameRoot }) => {
     labelGap: 10,
     scale: 1,
   };
+  const careSparkleState = {
+    timer: 0,
+  };
   const toastState = {
     phase: "hidden",
     timer: 0,
@@ -359,6 +381,20 @@ const initGame = ({ textures, gameRoot }) => {
     careLabel.style.fontSize = Math.round(10 * careUiState.scale);
     careLabel.x = 0;
     careLabel.y = 0;
+    const iconSize = 12 * careUiState.scale;
+    [careIconComfort, careIconFun, careIconEnergy, careSparkle].forEach((icon) => {
+      icon.scale.set(iconSize / Math.max(1, icon.texture.width));
+    });
+    const iconY = careUiState.height + careUiState.labelGap + iconSize * 0.15;
+    const iconGap = iconSize + 6 * careUiState.scale;
+    careIconComfort.x = iconSize * 0.5;
+    careIconComfort.y = iconY;
+    careIconFun.x = careIconComfort.x + iconGap;
+    careIconFun.y = iconY;
+    careIconEnergy.x = careIconFun.x + iconGap;
+    careIconEnergy.y = iconY;
+    careSparkle.x = careIconEnergy.x + iconGap;
+    careSparkle.y = iconY;
   };
   const updateToastLayout = (layout) => {
     toastLayout.scale = clamp(0.9 / layout.scale, 1, 1.25);
@@ -422,6 +458,11 @@ const initGame = ({ textures, gameRoot }) => {
       0,
       1,
     );
+    const isPlayingToy =
+      ballState.active &&
+      (ballState.dragging ||
+        ballState.isAirborne ||
+        Math.abs(ballState.velocityX) > 20);
     const width = careUiState.width;
     const height = careUiState.height;
     const radius = careUiState.cornerRadius;
@@ -440,6 +481,16 @@ const initGame = ({ textures, gameRoot }) => {
     careBarFill.endFill();
     careLabel.x = 0;
     careLabel.y = -careUiState.labelGap;
+    careIconComfort.alpha = 0.9;
+    careIconFun.alpha = isPlayingToy ? 0.95 : 0.35;
+    careIconEnergy.alpha = ratio > 0.5 ? 0.85 : 0.45;
+    if (careSparkleState.timer > 0) {
+      careSparkle.visible = true;
+      careSparkle.alpha = Math.min(1, careSparkleState.timer / 0.6);
+    } else {
+      careSparkle.visible = false;
+      careSparkle.alpha = 0;
+    }
   };
 
   const showToast = (text) => {
@@ -2611,7 +2662,7 @@ const initGame = ({ textures, gameRoot }) => {
     }
     setState("wake");
     state.wakeTimer = wakeTiming.duration;
-    showSprite("idle");
+    showSprite("react_stretch");
     registerActivity();
   };
 
@@ -2643,6 +2694,8 @@ const initGame = ({ textures, gameRoot }) => {
     sleepSprite2.visible = name === "sleep_2";
     reactCuteSprite.visible = name === "react_cute";
     reactAyoSprite.visible = name === "react_ayo";
+    reactStretchSprite.visible = name === "react_stretch";
+    reactShySprite.visible = name === "react_shy";
   };
   const refreshSpriteVisibility = () => {
     setSpriteVisibility(visualState.override ?? visualState.intent);
@@ -3252,6 +3305,9 @@ const initGame = ({ textures, gameRoot }) => {
     if (isPlayingToy) {
       addCare(careConfig.playBoostPerSecond * deltaSeconds);
     }
+    if (careSparkleState.timer > 0) {
+      careSparkleState.timer = Math.max(0, careSparkleState.timer - deltaSeconds);
+    }
     if (careState.value <= careConfig.criticalThreshold) {
       if (!careState.criticalPrompted) {
         showHint("attention", { priority: true });
@@ -3270,21 +3326,25 @@ const initGame = ({ textures, gameRoot }) => {
     }
     if (careState.value >= careConfig.streakThreshold) {
       careState.streakTimer += deltaSeconds;
-      if (careState.streakTimer >= careConfig.streakSeconds) {
-        careState.streakTimer = 0;
-        careState.streakCount += 1;
-        for (let i = 0; i < 2; i += 1) {
-          spawnHeart("excited", { force: true, ignoreCooldown: true });
-        }
-        if (careState.streakCount % 3 === 0) {
-          showToast("Bestie streak!");
-          for (let i = 0; i < 3; i += 1) {
+        if (careState.streakTimer >= careConfig.streakSeconds) {
+          careState.streakTimer = 0;
+          careState.streakCount += 1;
+          for (let i = 0; i < 2; i += 1) {
             spawnHeart("excited", { force: true, ignoreCooldown: true });
           }
-        } else {
-          showToast(`Care streak +${careState.streakCount}`);
+          if (careState.streakCount % 3 === 0) {
+            showToast("Bestie streak!");
+            for (let i = 0; i < 3; i += 1) {
+              spawnHeart("excited", { force: true, ignoreCooldown: true });
+            }
+            setSpriteOverride("react_shy");
+            state.reactSquishTimer = 0;
+            state.reactTimer = 0.9;
+            careSparkleState.timer = 1.2;
+          } else {
+            showToast(`Care streak +${careState.streakCount}`);
+          }
         }
-      }
     } else {
       careState.streakTimer = 0;
     }
@@ -3472,6 +3532,13 @@ const initGame = ({ textures, gameRoot }) => {
       }
     }
 
+    if (state.reactTimer > 0 && state.current !== "react_ayo") {
+      state.reactTimer -= deltaSeconds;
+      if (state.reactTimer <= 0) {
+        setSpriteOverride(null);
+      }
+    }
+
     if (state.current === "sleep") {
       state.sleepTimer += deltaSeconds;
       const frameDuration =
@@ -3512,6 +3579,9 @@ const initGame = ({ textures, gameRoot }) => {
 
     if (state.current === "wake") {
       state.wakeTimer -= deltaSeconds;
+      if (state.wakeTimer <= wakeTiming.duration * 0.45) {
+        showSprite("idle");
+      }
       if (state.wakeTimer <= 0) {
         setState("idle");
         showSprite("idle");
