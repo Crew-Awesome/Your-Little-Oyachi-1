@@ -3,42 +3,75 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Your Little Oyachi</title>
-    <meta name="theme-color" content="#f7d6df" />
+    <title>Your Little Oyachi — Game</title>
+    <meta name="theme-color" content="#fff9f2" />
     <link rel="canonical" href="https://oyachigame.nichesite.org/game.html" />
     <meta
       name="description"
-      content="A cozy little pet game where you hang out with Oyachi, give gentle pats, and watch her adorable reactions."
-    />
-    <meta property="og:type" content="website" />
-    <meta property="og:site_name" content="Your Little Oyachi" />
-    <meta property="og:title" content="Your Little Oyachi" />
-    <meta
-      property="og:description"
-      content="A cozy little pet game where you hang out with Oyachi, give gentle pats, and watch her adorable reactions."
-    />
-    <meta property="og:url" content="https://oyachigame.nichesite.org/game.html" />
-    <meta
-      property="og:image"
-      content="https://oyachigame.nichesite.org/assets/site/cover-art.png"
-    />
-    <meta property="og:image:width" content="1200" />
-    <meta property="og:image:height" content="630" />
-    <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:title" content="Your Little Oyachi" />
-    <meta
-      name="twitter:description"
-      content="A cozy little pet game where you hang out with Oyachi, give gentle pats, and watch her adorable reactions."
-    />
-    <meta
-      name="twitter:image"
-      content="https://oyachigame.nichesite.org/assets/site/cover-art.png"
+      content="Jump into Oyachi's room, give her a pet, toss a toy, and enjoy the cozy animation."
     />
     <link rel="stylesheet" href="styles.css" />
   </head>
   <body class="game-only">
-    <div id="game" aria-live="polite"></div>
+    <main class="game-page">
+      <header class="game-header">
+        <div>
+          <p class="hero__eyebrow">Live room</p>
+          <h1>Just you and Oyachi.</h1>
+          <p class="game-header__subtitle">
+            Tap, drag, and watch her react. The canvas is fully interactive — pets, toys,
+            and costumes all live in a single, calm scene.
+          </p>
+        </div>
+        <div class="game-header__actions">
+          <a class="hero__ghost" href="index.html">Return home</a>
+          <a class="hero__button" href="about.html">About</a>
+        </div>
+      </header>
+      <div class="game-wrapper">
+        <div class="layout-picker" role="tablist" aria-label="Room layouts">
+          <button type="button" data-layout="classic" role="tab">Classic</button>
+          <button type="button" data-layout="sunset" role="tab">Sunset</button>
+          <button type="button" data-layout="night" role="tab">Night</button>
+        </div>
+        <div class="room__frame" data-layout="classic">
+          <div class="room__background"></div>
+          <div id="game" role="img" aria-label="Oyachi’s room"></div>
+          <div class="room__glow"></div>
+        </div>
+        <footer class="game-footer">
+          <p>Touch the canvas to interact — Oyachi will respond with small animations.</p>
+          <p>Try pets, tossing toys, or letting her nap; she keeps the vibe slow and cozy.</p>
+        </footer>
+      </div>
+    </main>
+
     <script src="https://cdn.jsdelivr.net/npm/pixi.js@7.3.2/dist/pixi.min.js"></script>
     <script type="module" src="src/game/index.js?v=2026-01-20"></script>
+    <script>
+      (function () {
+        const frame = document.querySelector('.room__frame');
+        const picker = document.querySelector('.layout-picker');
+        const buttons = picker.querySelectorAll('button');
+        const storageKey = 'oyachi-room-layout';
+
+        function setLayout(layout) {
+          frame.dataset.layout = layout;
+          buttons.forEach((button) => {
+            button.classList.toggle('is-active', button.dataset.layout === layout);
+          });
+          localStorage.setItem(storageKey, layout);
+        }
+
+        picker.addEventListener('click', (event) => {
+          const button = event.target.closest('button');
+          if (!button) return;
+          setLayout(button.dataset.layout);
+        });
+
+        const saved = localStorage.getItem(storageKey) || 'classic';
+        setLayout(saved);
+      })();
+    </script>
   </body>
 </html>
