@@ -89,6 +89,9 @@ export const createMainScene = ({ textures, gameRoot }) => initGame({ textures, 
    - Ball nudges when idle to invite play
    - Zoomies burst during happy idle moments
    - Gratitude hearts on long-hold reaction
+   - Affection bias: frequent pets make Oyachi move toward the last pet location
+   - Play rhythm: repeated throws shorten return timing
+   - Bestie streak toast every third care streak
 
 ## State Machine Details
 

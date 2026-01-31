@@ -26,6 +26,7 @@ AI agents must keep AGENTS.md files continuously updated whenever they change co
   - Ball physics and interaction
   - Care system (single meter, prompts, streak)
   - Toast popups (care streak, catch milestones)
+  - Affection/throw rhythm tweaks for returning play
   - Input handling (petting, dragging)
   - UI overlay management (hints, settings, toys, closet)
   - Main game loop via `app.ticker.add()`

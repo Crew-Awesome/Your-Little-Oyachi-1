@@ -550,7 +550,11 @@ const initGame = ({ textures, gameRoot }) => {
         return false;
       }
     }
-    hintText.text = config.text;
+    const hintMessage =
+      id === "attention" && careState.value <= careConfig.lowThreshold
+        ? "Oyachi misses you"
+        : config.text;
+    hintText.text = hintMessage;
     hintOverlay.alpha = 0;
     hintOverlay.visible = true;
     updateHintLayout(getLayoutBounds());
@@ -1955,6 +1959,11 @@ const initGame = ({ textures, gameRoot }) => {
   let holdLoopStarted = false;
   let holdLoopTimeout = null;
   let petHoldTimeMs = 0;
+  const affectionState = {
+    petCount: 0,
+    lastPetAt: 0,
+    lastPetX: null,
+  };
   const idleBobState = {
     phase: Math.random() * Math.PI * 2,
     offset: 0,
@@ -2077,6 +2086,10 @@ const initGame = ({ textures, gameRoot }) => {
     lastCatchAt: 0,
   };
   const toyCatchMilestones = new Set([3, 5, 10]);
+  const playRhythmState = {
+    count: 0,
+    lastAt: 0,
+  };
 
   let ballInteractionLocked = false;
   const isBallHeld = () => toyInteraction.phase === "hold";
@@ -2719,6 +2732,11 @@ const initGame = ({ textures, gameRoot }) => {
     if (event?.data?.originalEvent) {
       event.data.originalEvent.preventDefault();
     }
+    if (event?.data?.global) {
+      affectionState.lastPetX = event.data.global.x;
+    }
+    affectionState.petCount += 1;
+    affectionState.lastPetAt = performance.now();
     activePetPointerId = getPointerId(event);
     petHoldActive = true;
     holdLoopStarted = false;
@@ -2758,6 +2776,9 @@ const initGame = ({ textures, gameRoot }) => {
     }
     if (event?.data?.originalEvent) {
       event.data.originalEvent.preventDefault();
+    }
+    if (event?.data?.global) {
+      affectionState.lastPetX = event.data.global.x;
     }
     registerActivity();
   };
@@ -2813,6 +2834,12 @@ const initGame = ({ textures, gameRoot }) => {
         getBaseY(ballState.depth) - ballConfig.playerTossLift * getDepthScale(ballState.depth);
       ballState.lastThrowAt = now;
       ballState.lastThrowDirection = direction;
+      if (now - playRhythmState.lastAt < 3500) {
+        playRhythmState.count = Math.min(playRhythmState.count + 1, 5);
+      } else {
+        playRhythmState.count = 1;
+      }
+      playRhythmState.lastAt = now;
     } else {
       ballState.velocityX = clamp(speed, -240, 240);
       ballState.velocityY = 0;
@@ -3247,7 +3274,14 @@ const initGame = ({ textures, gameRoot }) => {
         for (let i = 0; i < 2; i += 1) {
           spawnHeart("excited", { force: true, ignoreCooldown: true });
         }
-        showToast(`Care streak +${careState.streakCount}`);
+        if (careState.streakCount % 3 === 0) {
+          showToast("Bestie streak!");
+          for (let i = 0; i < 3; i += 1) {
+            spawnHeart("excited", { force: true, ignoreCooldown: true });
+          }
+        } else {
+          showToast(`Care streak +${careState.streakCount}`);
+        }
       }
     } else {
       careState.streakTimer = 0;
@@ -3326,7 +3360,15 @@ const initGame = ({ textures, gameRoot }) => {
           scheduleIdle();
         }
         if (state.current === "idle" && idleChance >= 0.5) {
-          scheduleMove();
+          const wantsCompany =
+            affectionState.petCount >= 8 &&
+            Number.isFinite(affectionState.lastPetX) &&
+            Math.random() < 0.6;
+          if (wantsCompany) {
+            scheduleMoveTo(affectionState.lastPetX);
+          } else {
+            scheduleMove();
+          }
         }
       }
     }
@@ -3461,6 +3503,11 @@ const initGame = ({ textures, gameRoot }) => {
       }
     }
 
+    if (playRhythmState.count > 0 && performance.now() - playRhythmState.lastAt > 7000) {
+      playRhythmState.count = 0;
+      playRhythmState.lastAt = 0;
+    }
+
     if (state.current === "wake") {
       state.wakeTimer -= deltaSeconds;
       if (state.wakeTimer <= 0) {
@@ -3511,7 +3558,8 @@ const initGame = ({ textures, gameRoot }) => {
           Math.abs(oyachi.x - ballState.x) < 18
         ) {
           toyInteraction.phase = "hold";
-          toyInteraction.timer = 0.35 + Math.random() * 0.15;
+          const rhythmBoost = playRhythmState.count >= 3 ? 0.12 : 0;
+          toyInteraction.timer = 0.35 + Math.random() * 0.15 - rhythmBoost;
           setSpriteOverride("hold_ball");
           hideBall();
           const now = performance.now();
