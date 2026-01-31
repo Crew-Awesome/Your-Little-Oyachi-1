@@ -632,11 +632,11 @@ CI/CD configuration.
 ### Adding a New Animation/State
 
 **Step 1: Add Sprite Asset**
-- Place sprite in `assets/images/characters/oyachi/`
+- Place sprite in `assets/characters/oyachi/`
 - Maintain consistent dimensions (reference existing sprites)
 - Add to `assets.js`:
   ```javascript
-  { alias: "my_new_state", src: "assets/images/characters/oyachi/my_new_state.png" }
+  { alias: "my_new_state", src: "assets/characters/oyachi/my_new_state.png" }
   ```
 
 **Step 2: Create Sprite in Main Scene**
@@ -771,10 +771,10 @@ CI/CD configuration.
 ### Adding a New Interaction/Toy
 
 **Step 1: Add Toy Asset**
-- Place sprite in `assets/images/toys/`
+- Place sprite in `assets/toys/`
 - Add to `assets.js`:
   ```javascript
-  { alias: "my_toy", src: "assets/images/toys/my_toy.png" }
+  { alias: "my_toy", src: "assets/toys/my_toy.png" }
   ```
 
 **Step 2: Add Toy Option to Panel**

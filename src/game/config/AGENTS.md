@@ -33,7 +33,7 @@ export const coverArtAsset = {/* Start screen cover image */};
 
 **Example Addition:**
 ```javascript
-{ alias: "my_new_sprite", src: "assets/images/characters/oyachi/my_new_sprite.png" }
+{ alias: "my_new_sprite", src: "assets/characters/oyachi/my_new_sprite.png" }
 ```
 
 **Recent Additions:**

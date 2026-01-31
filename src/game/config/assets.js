@@ -1,17 +1,17 @@
 export const uiAssets = [
-  { alias: "ui_settings", src: "assets/images/ui/gear.png" },
-  { alias: "ui_fullscreen_enter", src: "assets/images/ui/fullscreenenter.png" },
-  { alias: "ui_fullscreen_exit", src: "assets/images/ui/fullscreenexit.png" },
-  { alias: "ui_toys", src: "assets/images/ui/toys.png" },
-  { alias: "ui_costumes", src: "assets/images/ui/costumes.png" },
-  { alias: "ui_back", src: "assets/images/ui/arrowleftcartoon.png" },
-  { alias: "ui_play", src: "assets/images/ui/arrowrightcartoon.png" },
-  { alias: "ui_check", src: "assets/images/ui/check.png" },
-  { alias: "ui_heart", src: "assets/images/ui/heart.png" },
-  { alias: "ui_sparkle", src: "assets/images/ui/ui_sparkle.png" },
-  { alias: "ui_fun", src: "assets/images/ui/ui_fun.png" },
-  { alias: "ui_energy", src: "assets/images/ui/ui_energy.png" },
-  { alias: "ui_comfort", src: "assets/images/ui/ui_comfort.png" },
+  { alias: "ui_settings", src: "assets/ui/settings.png" },
+  { alias: "ui_fullscreen_enter", src: "assets/ui/fullscreen-enter.png" },
+  { alias: "ui_fullscreen_exit", src: "assets/ui/fullscreen-exit.png" },
+  { alias: "ui_toys", src: "assets/ui/toys.png" },
+  { alias: "ui_costumes", src: "assets/ui/costumes.png" },
+  { alias: "ui_back", src: "assets/ui/arrow-left.png" },
+  { alias: "ui_play", src: "assets/ui/arrow-right.png" },
+  { alias: "ui_check", src: "assets/ui/check.png" },
+  { alias: "ui_heart", src: "assets/ui/heart.png" },
+  { alias: "ui_sparkle", src: "assets/ui/sparkle.png" },
+  { alias: "ui_fun", src: "assets/ui/fun.png" },
+  { alias: "ui_energy", src: "assets/ui/energy.png" },
+  { alias: "ui_comfort", src: "assets/ui/comfort.png" },
 ];
 
 export const fontAssets = [
@@ -19,22 +19,23 @@ export const fontAssets = [
 ];
 
 export const gameAssets = [
-  { alias: "idle", src: "assets/images/characters/oyachi/base/idle_neutral.png" },
-  { alias: "blink", src: "assets/images/characters/oyachi/base/idle_blink.png" },
-  { alias: "pet", src: "assets/images/characters/oyachi/base/pet_squish.png" },
-  { alias: "hold_ball", src: "assets/images/characters/oyachi/base/hold_ball.png" },
-  { alias: "idle_tired", src: "assets/images/characters/oyachi/base/idle_tired.png" },
-  { alias: "idle_sneeze", src: "assets/images/characters/oyachi/base/idle_sneeze.png" },
-  { alias: "sleep_1", src: "assets/images/characters/oyachi/base/sleep_idle_1.png" },
-  { alias: "sleep_2", src: "assets/images/characters/oyachi/base/sleep_idle_2.png" },
-  { alias: "react_cute", src: "assets/images/characters/oyachi/base/react_excited_cute.png" },
-  { alias: "react_ayo", src: "assets/images/characters/oyachi/base/react_excited_ayo.png" },
-  { alias: "react_stretch", src: "assets/images/characters/oyachi/base/react_stretch.png" },
-  { alias: "react_shy_smile", src: "assets/images/characters/oyachi/base/react_shy_smile.png" },
-  { alias: "ball", src: "assets/images/toys/ball.png" },
+  { alias: "idle", src: "assets/characters/oyachi/base/idle-neutral.png" },
+  { alias: "blink", src: "assets/characters/oyachi/base/idle-blink.png" },
+  { alias: "pet", src: "assets/characters/oyachi/base/pet-squish.png" },
+  { alias: "hold_ball", src: "assets/characters/oyachi/base/hold-ball.png" },
+  { alias: "idle_tired", src: "assets/characters/oyachi/base/idle-tired.png" },
+  { alias: "idle_sneeze", src: "assets/characters/oyachi/base/idle-sneeze.png" },
+  { alias: "sleep_1", src: "assets/characters/oyachi/base/sleep-idle-1.png" },
+  { alias: "sleep_2", src: "assets/characters/oyachi/base/sleep-idle-2.png" },
+  { alias: "react_cute", src: "assets/characters/oyachi/base/react-excited-cute.png" },
+  { alias: "react_ayo", src: "assets/characters/oyachi/base/react-excited-ayo.png" },
+  { alias: "react_surprised", src: "assets/characters/oyachi/base/react-surprised.png" },
+  { alias: "react_stretch", src: "assets/characters/oyachi/base/react-stretch.png" },
+  { alias: "react_shy_smile", src: "assets/characters/oyachi/base/react-shy-smile.png" },
+  { alias: "ball", src: "assets/toys/ball.png" },
 ];
 
 export const coverArtAsset = {
   alias: "coverart",
-  src: "assets/images/site/coverart.png",
+  src: "assets/site/cover-art.png",
 };

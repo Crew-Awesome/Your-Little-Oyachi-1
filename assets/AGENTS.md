@@ -47,39 +47,42 @@ AI agents must keep AGENTS.md files continuously updated whenever they change co
 **Format:** TTF or WOFF2 recommended
 **Usage:** In-game text (Tiny5 fontFamily)
 
-### `images/`
+### `characters/`
 **Subfolders:**
 
-#### `characters/oyachi/`
+#### `oyachi/`
 **Purpose:** Oyachi character sprites
 
 **Files:**
-- `base/idle_neutral.png`: Default idle pose
-- `base/idle_blink.png`: Blinking animation
-- `base/pet_squish.png`: Pet reaction
-- `base/hold_ball.png`: Holding ball pose
-- `base/idle_tired.png`: Tired before sleep
-- `base/idle_sneeze.png`: Sneeze animation
-- `base/sleep_idle_1.png`: Sleep frame 1
-- `base/sleep_idle_2.png`: Sleep frame 2
-- `base/react_excited_cute.png`: Hold pet cute reaction
-- `base/react_excited_ayo.png`: Long hold ayo reaction
+- `base/idle-neutral.png`: Default idle pose (size reference)
+- `base/idle-blink.png`: Blinking animation
+- `base/pet-squish.png`: Pet reaction
+- `base/hold-ball.png`: Holding ball pose
+- `base/idle-tired.png`: Tired before sleep
+- `base/idle-sneeze.png`: Sneeze animation
+- `base/sleep-idle-1.png`: Sleep frame 1
+- `base/sleep-idle-2.png`: Sleep frame 2
+- `base/react-excited-cute.png`: Hold pet cute reaction
+- `base/react-excited-ayo.png`: Long hold ayo reaction
+- `base/react-stretch.png`: Wake stretch
+- `base/react-shy-smile.png`: Shy smile
+- `base/react-surprised.png`: Surprised reaction
 
 **Format:** PNG with transparency
 **Dimensions:** All sprites should share consistent base dimensions
 **Style:** Pixel art, same scale (0.6 in game)
 
-#### `site/`
+### `site/`
 **Purpose:** Site-only static assets
 
 **Files:**
 - `logo.png`: Site logo
-- `coverart.png`: Open graph cover image
-- `bggradient.png`: Background gradient
+- `cover-art.png`: Open graph cover image
+- `bg-gradient.png`: Background gradient
 
 **Format:** PNG for images with transparency
 
-#### `toys/`
+### `toys/`
 **Purpose:** Interactive toy sprites
 
 **Files:**
@@ -87,28 +90,32 @@ AI agents must keep AGENTS.md files continuously updated whenever they change co
 
 **Format:** PNG with transparency
 
-#### `ui/`
+### `ui/`
 **Purpose:** In-game UI icons
 
 **Files:**
-- `gear.png`: Settings button
-- `fullscreenenter.png`: Enter fullscreen
-- `fullscreenexit.png`: Exit fullscreen
+- `settings.png`: Settings button
+- `fullscreen-enter.png`: Enter fullscreen
+- `fullscreen-exit.png`: Exit fullscreen
 - `toys.png`: Toys panel button
 - `costumes.png`: Closet/costumes button
-- `arrowleftcartoon.png`: Back button
-- `arrowrightcartoon.png`: Play button
+- `arrow-left.png`: Back button
+- `arrow-right.png`: Play button
 - `check.png`: Toggle checkmark
 - `heart.png`: Heart particle
+- `comfort.png`: Comfort icon
+- `energy.png`: Energy icon
+- `fun.png`: Fun icon
+- `sparkle.png`: Sparkle accent
 
 **Format:** PNG with transparency
 **Style:** Consistent with game aesthetic
 
-#### `icons/`
+### `icons/`
 **Purpose:** Browser metadata icons (favicon, etc.)
 
 **Files:**
-- `faviconbig.png`
+- `favicon-big.png`
 
 **Format:** PNG
 
@@ -116,13 +123,13 @@ AI agents must keep AGENTS.md files continuously updated whenever they change co
 
 ### General Rules
 - Lowercase filenames
-- No spaces (use underscores or hyphens)
+- No spaces (use hyphens)
 - Descriptive names
-- Consistent separators (use one style)
+- Kebab-case only
 
 ### Character Sprites
 - `{state}.png` format
-- States: `idle`, `idle_blink`, `pet`, `hold_ball`, `idle_tired`, `idle_sneeze`, `sleep_1`, `sleep_2`, `react_cute`, `react_ayo`
+- States: `idle-neutral`, `idle-blink`, `pet-squish`, `hold-ball`, `idle-tired`, `idle-sneeze`, `sleep-idle-1`, `sleep-idle-2`, `react-excited-cute`, `react-excited-ayo`, `react-stretch`, `react-shy-smile`, `react-surprised`
 
 ### SFX Files
 - `{action}_{variant}.wav` format
@@ -130,19 +137,19 @@ AI agents must keep AGENTS.md files continuously updated whenever they change co
 
 ### UI Icons
 - `{function}.png` format
-- Functions: `settings`, `fullscreen_enter`, `fullscreen_exit`, `toys`, `costumes`, `back`, `play`, `check`, `heart`
+- Functions: `settings`, `fullscreen-enter`, `fullscreen-exit`, `toys`, `costumes`, `arrow-left`, `arrow-right`, `check`, `heart`, `comfort`, `energy`, `fun`, `sparkle`
 
 ## Asset Loading
 
 ### Manifest in `src/game/config/assets.js`
 ```javascript
 export const uiAssets = [
-  { alias: "ui_settings", src: "assets/images/ui/gear.png" },
+  { alias: "ui_settings", src: "assets/ui/settings.png" },
   // ...
 ];
 
 export const gameAssets = [
-  { alias: "idle", src: "assets/images/characters/oyachi/base/idle_neutral.png" },
+  { alias: "idle", src: "assets/characters/oyachi/base/idle-neutral.png" },
   // ...
 ];
 
@@ -178,6 +185,7 @@ export const fontAssets = [
 
 ### Oyachi Sprites
 - All must share base dimensions
+- Use `idle-neutral.png` as the size reference
 - `applySpriteAnchor()` warns if mismatch >2px
 - Check sprite dimensions before adding
 
@@ -198,6 +206,7 @@ export const fontAssets = [
 - Use NEAREST scale mode (already set in index.js)
 - No anti-aliasing
 - Crisp edges preferred
+- Use 4x square pixel brush for UI and character sprites
 
 ### Audio
 - Use consistent sample rate (44.1kHz)

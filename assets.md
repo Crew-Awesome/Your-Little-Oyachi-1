@@ -4,7 +4,7 @@
 - **Idle base sprite**
   - **Description:** Default grounded pose on the floor.
   - **Intended use in code:** Base idle state rendering.
-  - **Notes:** Single frame or minimal idle loop.
+  - **Notes:** Single frame or minimal idle loop. Use this as the size reference (4x pixel brush).
 - **Blink variants**
   - **Description:** Subtle eye-close frames for blinking.
   - **Intended use in code:** Randomized idle blink timing.
@@ -17,11 +17,11 @@
   - **Description:** Half-lidded eyes for drowsy idle.
   - **Intended use in code:** Inactivity-based idle variant.
   - **Notes:** Single frame.
-- **Idle tired (idle_tired.png)**
+- **Idle tired (idle-tired.png)**
   - **Description:** Drowsy idle sprite before sleep.
   - **Intended use in code:** Shows after inactivity, before sleep transition.
   - **Notes:** Grounded, no movement.
-- **Idle sneeze (idle_sneeze.png)**
+- **Idle sneeze (idle-sneeze.png)**
   - **Description:** Brief sneeze reaction.
   - **Intended use in code:** Random one-shot idle reaction.
   - **Notes:** Plays once, returns to idle.
@@ -29,7 +29,7 @@
   - **Description:** Gentle breathing or eyelid motion.
   - **Intended use in code:** Sleep state loop.
   - **Notes:** 2-frame loop, low amplitude.
-- **Sleep idle frames (sleep_idle_1.png / sleep_idle_2.png)**
+- **Sleep idle frames (sleep-idle-1.png / sleep-idle-2.png)**
   - **Description:** Two-frame sleep breathing loop.
   - **Intended use in code:** Loop during sleep state.
   - **Notes:** Keep timing slow and calming.
@@ -47,11 +47,11 @@
   - **Description:** Gentle and excited reactions.
   - **Intended use in code:** Click-and-hold petting loop.
   - **Notes:** 2–4 frames per variant.
-- **React excited (react_excited_cute.png)**
+- **React excited (react-excited-cute.png)**
   - **Description:** Calm, affectionate reaction to gentle pet hold.
   - **Intended use in code:** Plays during gentle hold.
   - **Notes:** Grounded; may emit hearts slowly.
-- **React excited (react_excited_ayo.png)**
+- **React excited (react-excited-ayo.png)**
   - **Description:** Stronger reaction to long pet hold.
   - **Intended use in code:** Timed reaction after long hold.
   - **Notes:** Follow with a move-away hop.
@@ -75,7 +75,7 @@
   - **Description:** Simple, readable ball.
   - **Intended use in code:** Draggable/tossable toy object.
   - **Notes:** 1 frame with optional shadow.
-- **Toy ball (toy_ball.png)**
+- **Toy ball (ball.png)**
   - **Description:** Primary ball toy sprite.
   - **Intended use in code:** Drag, toss, and collision wake interactions.
   - **Notes:** Keep scale small and grounded to the floor.
