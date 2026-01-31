@@ -85,6 +85,11 @@ export const createMainScene = ({ textures, gameRoot }) => initGame({ textures, 
    - Low care accelerates tiredness and triggers attention hints
    - Session streak rewards when care stays high
 
+10. **No-asset Fun Loops**:
+   - Ball nudges when idle to invite play
+   - Zoomies burst during happy idle moments
+   - Gratitude hearts on long-hold reaction
+
 ## State Machine Details
 
 ### State Transitions

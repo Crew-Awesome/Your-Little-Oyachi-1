@@ -2012,6 +2012,12 @@ const initGame = ({ textures, gameRoot }) => {
     idleHeartTimer: 0,
   };
 
+  const zoomiesState = {
+    active: false,
+    timer: 0,
+    cooldown: 10 + Math.random() * 12,
+  };
+
   const ballConfig = {
     gravity: 1600,
     bounceDamping: 0.55,
@@ -2062,6 +2068,9 @@ const initGame = ({ textures, gameRoot }) => {
   const toyInteraction = {
     phase: "idle",
     timer: 4,
+  };
+  const toyNudgeState = {
+    timer: 3 + Math.random() * 4,
   };
   const toyCatchState = {
     count: 0,
@@ -2953,6 +2962,17 @@ const initGame = ({ textures, gameRoot }) => {
     scheduleDepth();
   };
 
+  const startZoomies = () => {
+    zoomiesState.active = true;
+    zoomiesState.timer = 1.8 + Math.random() * 1.2;
+    zoomiesState.cooldown = 18 + Math.random() * 18;
+    state.moveTimer = 120 + Math.random() * 80;
+    state.moveDirection = Math.random() < 0.5 ? -1 : 1;
+    state.moveTargetX = null;
+    setState("move", state.moveTimer);
+    scheduleDepth();
+  };
+
   const scheduleDepth = () => {
     state.depthTimer = 220 + Math.random() * 240;
     state.depthTarget = 0.2 + Math.random() * 0.7;
@@ -3055,6 +3075,8 @@ const initGame = ({ textures, gameRoot }) => {
     state.reactTimer = petHoldTiming.ayoDuration;
     state.reactSquishTimer = 0;
     showSprite("react_ayo");
+    spawnHeart("gentle", { force: true, ignoreCooldown: true });
+    spawnHeart("gentle", { force: true, ignoreCooldown: true });
     resetHoldPetState({ loopOptions: { immediate: true }, reason: "react_ayo" });
     void audioSystem.playSfx({ id: "petOh", cooldownMs: 1000, allowPitch: false });
   };
@@ -3308,6 +3330,19 @@ const initGame = ({ textures, gameRoot }) => {
         }
       }
     }
+    if (
+      state.current === "idle" &&
+      !closetOpen &&
+      !petHoldActive &&
+      moodRatio > 0.6 &&
+      state.inactiveTime < idleBehavior.tiredDelay * 0.7
+    ) {
+      zoomiesState.cooldown -= deltaSeconds;
+      if (zoomiesState.cooldown <= 0 && Math.random() < 0.06) {
+        startZoomies();
+        showToast("Zoomies!");
+      }
+    }
     if (state.current === "idle" && moodRatio > 0.75) {
       moodState.idleHeartTimer -= deltaSeconds;
       if (moodState.idleHeartTimer <= 0) {
@@ -3419,6 +3454,13 @@ const initGame = ({ textures, gameRoot }) => {
     }
     idleTiltState.current += (idleTiltState.target - idleTiltState.current) * 0.08;
 
+    if (zoomiesState.active) {
+      zoomiesState.timer -= deltaSeconds;
+      if (zoomiesState.timer <= 0) {
+        zoomiesState.active = false;
+      }
+    }
+
     if (state.current === "wake") {
       state.wakeTimer -= deltaSeconds;
       if (state.wakeTimer <= 0) {
@@ -3429,6 +3471,22 @@ const initGame = ({ textures, gameRoot }) => {
     }
 
     if (ballState.active && !closetOpen) {
+      if (
+        state.current === "idle" &&
+        !ballState.isAirborne &&
+        !ballState.dragging &&
+        !ballState.isHidden &&
+        ballState.velocityX === 0
+      ) {
+        toyNudgeState.timer -= deltaSeconds;
+        if (toyNudgeState.timer <= 0) {
+          const direction = oyachi.x <= ballState.x ? 1 : -1;
+          ballState.velocityX = (40 + Math.random() * 40) * direction;
+          toyNudgeState.timer = 4 + Math.random() * 5;
+        }
+      } else {
+        toyNudgeState.timer = Math.max(toyNudgeState.timer, 2);
+      }
       if (toyInteraction.phase === "idle") {
         toyInteraction.timer -= deltaSeconds;
         if (toyInteraction.timer <= 0) {
@@ -3518,8 +3576,9 @@ const initGame = ({ textures, gameRoot }) => {
 
     if (state.current === "move") {
       const hopPhase = ((performance.now() / 1000) * 2) % 1;
-      hopHeight = Math.sin(hopPhase * Math.PI) * 12;
-      const speed = 0.6 * delta;
+      const zoomiesBoost = zoomiesState.active ? 1.9 : 1;
+      hopHeight = Math.sin(hopPhase * Math.PI) * 12 * zoomiesBoost;
+      const speed = 0.6 * delta * zoomiesBoost;
       oyachi.x += state.moveDirection * speed;
       if (oyachi.x < roomLeft || oyachi.x > roomRight) {
         state.moveDirection *= -1;
