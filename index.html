@@ -2,78 +2,54 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <link
-      rel="preload"
-      href="assets/fonts/DePixel/1144faa6fb5f8b45e79d4d87a8c27e92.woff2"
-      as="font"
-      type="font/woff2"
-      crossorigin
-    />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <!-- Preload DePixel font for faster rendering of UI text -->
+  <link rel="preload" href="assets/fonts/DePixel/1144faa6fb5f8b45e79d4d87a8c27e92.woff2" as="font" type="font/woff2" crossorigin>
     <title>Your Little Oyachi</title>
-    <meta name="theme-color" content="#fff9f2" />
+    <meta name="theme-color" content="#f7d6df" />
+    <link rel="canonical" href="https://oyachigame.nichesite.org/" />
     <meta
       name="description"
-      content="A calm little pet room where you can chill with Oyachi, give pets, and keep the vibe cozy."
+      content="A cozy little pet game where you hang out with Oyachi, give gentle pats, and watch her adorable reactions."
     />
     <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Your Little Oyachi" />
     <meta property="og:title" content="Your Little Oyachi" />
-    <meta property="og:description" content="A calm little pet room where you can chill with Oyachi, give pets, and keep the vibe cozy." />
+    <meta
+      property="og:description"
+      content="A cozy little pet game where you hang out with Oyachi, give gentle pats, and watch her adorable reactions."
+    />
     <meta property="og:url" content="https://oyachigame.nichesite.org/" />
-    <meta property="og:image" content="https://oyachigame.nichesite.org/assets/site/cover-art.png" />
+    <meta
+      property="og:image"
+      content="https://oyachigame.nichesite.org/assets/site/cover-art.png"
+    />
     <meta property="og:image:width" content="1200" />
     <meta property="og:image:height" content="630" />
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content="Your Little Oyachi" />
-    <meta name="twitter:description" content="A calm little pet room where you can chill with Oyachi, give pets, and keep the vibe cozy." />
-    <meta name="twitter:image" content="https://oyachigame.nichesite.org/assets/site/cover-art.png" />
+    <meta
+      name="twitter:description"
+      content="A cozy little pet game where you hang out with Oyachi, give gentle pats, and watch her adorable reactions."
+    />
+    <meta
+      name="twitter:image"
+      content="https://oyachigame.nichesite.org/assets/site/cover-art.png"
+    />
     <link rel="stylesheet" href="styles.css" />
   </head>
   <body>
-    <div class="page">
-      <header class="hero">
-        <div class="hero__content">
-          <img src="assets/site/logo.png" alt="Oyachi" class="hero__logo" />
-          <div>
-            <p class="hero__eyebrow">Your Little Oyachi</p>
-            <h1>Calm room vibes, playful moments.</h1>
-            <p>
-              Drop into Oyachi's tiny room, give her a gentle pat, toss a toy, and
-              see how she reacts. It’s a simple space built for unplugged, slow
-              interactions with a cozy companion.
-            </p>
-            <div class="hero__actions">
-              <a class="hero__button" href="game.html" aria-label="Open the full game" target="_blank" rel="noopener">
-                Open game
-              </a>
-              <a class="hero__ghost" href="about.html" aria-label="Learn more about Oyachi">
-                Learn more
-              </a>
-            </div>
-          </div>
-        </div>
-      </header>
-
-      <section class="room">
-        <div class="room__frame">
-          <div id="game" role="img" aria-label="Oyachi’s room"></div>
-          <div class="room__glow"></div>
-        </div>
-        <div class="room__notes">
-          <p>
-            The room stays simple: a soft gradient floor, minimal accents, and
-            just enough space for Oyachi to move. Touch the canvas to trigger
-            pets, toys, or costumes — she’ll react with subtle motions.
-          </p>
-          <ul>
-            <li>Tap Oyachi to greet her.</li>
-            <li>Drag a toy to keep her curious.</li>
-            <li>Watch her settle into idle or nap states when she’s chill.</li>
-          </ul>
-        </div>
-      </section>
-    </div>
-
+    <main class="game-root">
+    <img src="assets/site/logo.png" alt="Oyachi" class="logo" />
+      <nav class="site-nav" aria-label="Site">
+        <span class="active" aria-current="page">Home</span>
+        <a href="about.html">About</a>
+      </nav>
+      <div id="game" aria-live="polite"></div>
+      <a class="open-game-link" href="game.html" target="_blank" rel="noopener">
+        Open game in new tab
+      </a>
+    </main>
     <script src="https://cdn.jsdelivr.net/npm/pixi.js@7.3.2/dist/pixi.min.js"></script>
     <script type="module" src="src/game/index.js?v=2026-01-20"></script>
   </body>
