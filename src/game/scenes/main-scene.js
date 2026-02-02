@@ -2265,87 +2265,34 @@ const initGame = ({ textures, gameRoot }) => {
     roomRight = Math.round(width * 0.82);
 
     wall.clear();
-    wall.beginFill(0xefe3d1);
+    wall.beginFill(0xe6dfe1);
     wall.drawRect(0, 0, width, wallHeight);
     wall.endFill();
 
     posterFrame.clear();
-    const posterWidth = Math.round(width * 0.18);
-    const posterHeight = Math.round(posterWidth * 0.68);
-    const posterX = Math.round(width * 0.18);
-    const posterY = Math.round(wallHeight * 0.18);
-    posterFrame.beginFill(0xd5c1ad, 1);
-    posterFrame.drawRect(posterX, posterY, posterWidth, posterHeight);
-    posterFrame.endFill();
-    posterFrame.beginFill(0xf4eee6, 1);
-    posterFrame.drawRect(posterX + 3, posterY + 3, posterWidth - 6, posterHeight - 6);
-    posterFrame.endFill();
-    posterFrame.lineStyle(1, 0x7a6653, 1);
-    posterFrame.moveTo(posterX + 8, posterY + 12);
-    posterFrame.lineTo(posterX + posterWidth - 8, posterY + 12);
-    posterFrame.moveTo(posterX + 8, posterY + posterHeight - 10);
-    posterFrame.lineTo(posterX + posterWidth - 12, posterY + posterHeight - 10);
+    posterFrame.visible = false;
 
     wallShelf.clear();
     shelfItems.clear();
-    const shelfWidth = Math.round(width * 0.2);
-    const shelfHeight = 6;
-    const shelfX = Math.round(width * 0.62);
-    const shelfY = Math.round(wallHeight * 0.3);
-    wallShelf.beginFill(0xc7b39c, 1);
-    wallShelf.drawRect(shelfX, shelfY, shelfWidth, shelfHeight);
-    wallShelf.endFill();
-    wallShelf.lineStyle(1, 0x8e7863, 1);
-    wallShelf.moveTo(shelfX, shelfY + shelfHeight);
-    wallShelf.lineTo(shelfX + shelfWidth, shelfY + shelfHeight);
-    const bookWidth = Math.round(shelfWidth * 0.22);
-    const bookHeight = 14;
-    const bookX = shelfX + 8;
-    const bookY = shelfY - bookHeight;
-    shelfItems.beginFill(0x8f6b5a, 1);
-    shelfItems.drawRect(bookX, bookY, bookWidth, bookHeight);
-    shelfItems.endFill();
-    shelfItems.beginFill(0x6b8c7a, 1);
-    shelfItems.drawRect(bookX + bookWidth + 6, bookY + 4, 12, 10);
-    shelfItems.endFill();
-    shelfItems.beginFill(0x9f8a75, 1);
-    shelfItems.drawRect(shelfX + shelfWidth - 20, shelfY - 8, 14, 8);
-    shelfItems.endFill();
-    shelfItems.beginFill(0x6f8f6b, 1);
-    shelfItems.drawRect(shelfX + shelfWidth - 18, shelfY - 14, 10, 6);
-    shelfItems.endFill();
+    wallShelf.visible = false;
+    shelfItems.visible = false;
 
     floor.clear();
-    floor.beginFill(0xdac6ad);
+    floor.beginFill(0xcbb8b1);
     floor.drawRect(0, wallHeight, width, height - wallHeight);
     floor.endFill();
-    floor.lineStyle(1, 0xd1bfa7, 0.08);
-    const plankStartY = Math.round(wallHeight + 12);
-    const plankGap = Math.max(26, Math.round(height * 0.06));
-    for (let y = plankStartY; y < height - 6; y += plankGap) {
-      const lineY = Math.round(y);
-      floor.moveTo(0, lineY);
-      floor.lineTo(width, lineY);
-    }
 
     floorMat.clear();
-    const matWidth = Math.round(Math.min(width, height) * 0.58);
-    const matHeight = Math.round(Math.min(width, height) * 0.12);
-    const matX = Math.round(width / 2);
-    const matY = Math.round(floorBottomY - matHeight * 0.55);
-    floorMat.beginFill(0xd1bba1);
-    floorMat.drawEllipse(matX, matY, matWidth / 2, matHeight / 2);
+    const matWidth = Math.round(Math.min(width, height) * 0.5);
+    const matHeight = Math.round(Math.min(width, height) * 0.1);
+    const matX = Math.round((width - matWidth) / 2);
+    const matY = Math.round(floorBottomY - matHeight * 0.8);
+    floorMat.beginFill(0xb9a7a1);
+    floorMat.drawRect(matX, matY, matWidth, matHeight);
     floorMat.endFill();
 
     rugDetail.clear();
-    rugDetail.lineStyle(1, 0xc3ac92, 1);
-    rugDetail.drawEllipse(matX, matY, matWidth * 0.38, matHeight * 0.32);
-    const stripeWidth = Math.round(matWidth * 0.28);
-    const stripeOffset = Math.round(matHeight * 0.16);
-    rugDetail.moveTo(matX - stripeWidth / 2, matY - stripeOffset);
-    rugDetail.lineTo(matX + stripeWidth / 2, matY - stripeOffset);
-    rugDetail.moveTo(matX - stripeWidth / 2, matY + stripeOffset);
-    rugDetail.lineTo(matX + stripeWidth / 2, matY + stripeOffset);
+    rugDetail.visible = false;
 
     seam.clear();
     seam.visible = false;
