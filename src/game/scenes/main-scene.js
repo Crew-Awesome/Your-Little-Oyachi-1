@@ -260,72 +260,6 @@ const initGame = ({ textures, gameRoot }) => {
   nowPlayingText.eventMode = "none";
   uiLayer.addChild(nowPlayingText);
 
-  const careOverlay = new PIXI.Container();
-  careOverlay.zIndex = 42;
-  careOverlay.roundPixels = true;
-  careOverlay.visible = false;
-  const careLabel = createPixelText("Care", {
-    fontSize: 10,
-    fill: 0x111111,
-    align: "left",
-  });
-  careLabel.anchor.set(0, 0.5);
-  careLabel.roundPixels = true;
-  const careIconComfort = new PIXI.Sprite(textures.ui_comfort);
-  const careIconFun = new PIXI.Sprite(textures.ui_fun);
-  const careIconEnergy = new PIXI.Sprite(textures.ui_energy);
-  const careSparkle = new PIXI.Sprite(textures.ui_sparkle);
-  const careTextEnergy = createPixelText("Energy", {
-    fontSize: 9,
-    fill: 0x111111,
-    align: "left",
-  });
-  const careTextComfort = createPixelText("Comfort", {
-    fontSize: 9,
-    fill: 0x111111,
-    align: "left",
-  });
-  const careTextFun = createPixelText("Fun", {
-    fontSize: 9,
-    fill: 0x111111,
-    align: "left",
-  });
-  careTextEnergy.anchor.set(0, 0.5);
-  careTextComfort.anchor.set(0, 0.5);
-  careTextFun.anchor.set(0, 0.5);
-  careTextEnergy.roundPixels = true;
-  careTextComfort.roundPixels = true;
-  careTextFun.roundPixels = true;
-  careIconComfort.anchor.set(0.5, 0.5);
-  careIconFun.anchor.set(0.5, 0.5);
-  careIconEnergy.anchor.set(0.5, 0.5);
-  careSparkle.anchor.set(0.5, 0.5);
-  careSparkle.visible = false;
-  careSparkle.alpha = 0;
-  const careBars = [
-    {
-      id: "energy",
-      icon: careIconEnergy,
-      label: careTextEnergy,
-      bg: new PIXI.Graphics(),
-      fill: new PIXI.Graphics(),
-    },
-    {
-      id: "comfort",
-      icon: careIconComfort,
-      label: careTextComfort,
-      bg: new PIXI.Graphics(),
-      fill: new PIXI.Graphics(),
-    },
-    { id: "fun", icon: careIconFun, label: careTextFun, bg: new PIXI.Graphics(), fill: new PIXI.Graphics() },
-  ];
-  careOverlay.addChild(careLabel);
-  careBars.forEach((bar) => {
-    careOverlay.addChild(bar.bg, bar.fill, bar.icon, bar.label);
-  });
-  careOverlay.addChild(careSparkle);
-  uiLayer.addChild(careOverlay);
-
   const toastOverlay = new PIXI.Container();
   toastOverlay.zIndex = 43;
   toastOverlay.roundPixels = true;
@@ -390,26 +324,6 @@ const initGame = ({ textures, gameRoot }) => {
     baseAlpha: 0.5,
     slideDistance: 12,
   };
-  const careUiState = {
-    x: 16,
-    y: 56,
-    width: 140,
-    height: 10,
-    totalWidth: 160,
-    barGap: 10,
-    cornerRadius: 4,
-    labelGap: 10,
-    labelOffset: 16,
-    scale: 1,
-  };
-  const careSparkleState = {
-    timer: 0,
-  };
-  const careBarState = {
-    energy: 1,
-    comfort: 1,
-    fun: 1,
-  };
   const toastState = {
     phase: "hidden",
     timer: 0,
@@ -442,56 +356,6 @@ const initGame = ({ textures, gameRoot }) => {
       const textScale = Math.min(1, maxTextWidth / Math.max(1, nowPlayingText.width));
       nowPlayingText.scale.set(textScale);
     }
-  };
-  const updateCareUiLayout = (layout) => {
-    const marginScale = uiScaleState.compact ? 1.1 : 1;
-    const baseWidth = 140;
-    const baseHeight = 10;
-    const baseGap = 10;
-    careUiState.scale = clamp(0.9 / layout.scale, 1, 1.35);
-    careUiState.width = baseWidth * careUiState.scale;
-    careUiState.height = baseHeight * careUiState.scale;
-    careUiState.barGap = baseGap * careUiState.scale;
-    careUiState.cornerRadius = 4 * careUiState.scale;
-    careUiState.labelGap = 10 * careUiState.scale;
-    careUiState.labelOffset = 16 * careUiState.scale;
-    const settingsHalf = getIconHalfSize(settingsButton.icon);
-    const targetX = settingsButton.container.x - settingsHalf.width;
-    const targetY =
-      settingsButton.container.y + settingsHalf.height + 18 * marginScale + careUiState.labelGap;
-    const iconSize = 14 * careUiState.scale;
-    const iconGap = 6 * careUiState.scale;
-    careUiState.totalWidth = careUiState.width + iconSize + iconGap;
-    const totalHeight =
-      careUiState.height * careBars.length + careUiState.barGap * (careBars.length - 1);
-    const minX = layout.left + 8;
-    const maxX = layout.right - 8 - careUiState.totalWidth;
-    const minY = layout.top + 8 + careUiState.labelGap;
-    const maxY = layout.bottom - 8 - totalHeight;
-    careUiState.x = Math.round(clamp(targetX, minX, maxX));
-    careUiState.y = Math.round(clamp(targetY, minY, maxY));
-    careOverlay.x = careUiState.x;
-    careOverlay.y = careUiState.y;
-    careLabel.style.fontSize = Math.round(10 * careUiState.scale);
-    careLabel.x = 0;
-    careLabel.y = 0;
-    careBars.forEach((bar, index) => {
-      const barY = index * (careUiState.height + careUiState.barGap);
-      const barX = iconSize + iconGap;
-      bar.icon.scale.set(iconSize / Math.max(1, bar.icon.texture.width));
-      bar.icon.x = iconSize * 0.5;
-      bar.icon.y = barY + careUiState.height / 2;
-      bar.label.style.fontSize = Math.round(9 * careUiState.scale);
-      bar.label.x = barX + careUiState.labelOffset;
-      bar.label.y = barY + careUiState.height / 2;
-      bar.bg.x = barX;
-      bar.bg.y = barY;
-      bar.fill.x = barX;
-      bar.fill.y = barY;
-    });
-    careSparkle.scale.set(iconSize / Math.max(1, careSparkle.texture.width));
-    careSparkle.x = careUiState.totalWidth - iconSize * 0.5;
-    careSparkle.y = careUiState.height / 2;
   };
   const updateToastLayout = (layout) => {
     toastLayout.scale = clamp(0.9 / layout.scale, 1, 1.25);
@@ -537,68 +401,6 @@ const initGame = ({ textures, gameRoot }) => {
     updateNowPlayingLayout(getLayoutBounds());
     nowPlayingState.phase = "fadein";
     nowPlayingState.timer = 0;
-  };
-
-  const getCareColor = (ratio) => {
-    if (ratio >= 0.7) {
-      return 0x7fbf74;
-    }
-    if (ratio >= 0.4) {
-      return 0xd8b45a;
-    }
-    return 0xcf7a62;
-  };
-
-  const updateCareUi = () => {
-    const ratio = clamp(
-      (careState.value - careConfig.min) / Math.max(1, careConfig.max - careConfig.min),
-      0,
-      1,
-    );
-    const isPlayingToy =
-      ballState.active &&
-      (ballState.dragging ||
-        ballState.isAirborne ||
-        Math.abs(ballState.velocityX) > 20);
-    const energyRatio = clamp(ratio + (state.current === "sleep" ? 0.1 : 0), 0, 1);
-    const comfortRatio = clamp(ratio + (petHoldActive ? 0.12 : 0), 0, 1);
-    const funRatio = clamp(ratio + (isPlayingToy ? 0.16 : -0.04), 0, 1);
-    const width = careUiState.width;
-    const height = careUiState.height;
-    const radius = careUiState.cornerRadius;
-    const ratios = {
-      energy: energyRatio,
-      comfort: comfortRatio,
-      fun: funRatio,
-    };
-    careBarState.energy += (ratios.energy - careBarState.energy) * 0.12;
-    careBarState.comfort += (ratios.comfort - careBarState.comfort) * 0.12;
-    careBarState.fun += (ratios.fun - careBarState.fun) * 0.12;
-    careBars.forEach((bar) => {
-      const barRatio = clamp(careBarState[bar.id] ?? ratios[bar.id] ?? ratio, 0, 1);
-      const fillWidth = Math.max(2, width * barRatio);
-      const fillRadius = Math.min(radius, fillWidth / 2);
-      bar.bg.clear();
-      bar.bg.beginFill(settingsColors.panel, 0.9);
-      bar.bg.drawRoundedRect(0, 0, width, height, radius);
-      bar.bg.endFill();
-      bar.bg.lineStyle(1, settingsColors.panelBorder, 0.45);
-      bar.bg.drawRoundedRect(0, 0, width, height, radius);
-      bar.fill.clear();
-      bar.fill.beginFill(getCareColor(barRatio), 0.95);
-      bar.fill.drawRoundedRect(0, 0, fillWidth, height, fillRadius);
-      bar.fill.endFill();
-      bar.icon.alpha = 0.4 + barRatio * 0.6;
-    });
-    careLabel.x = 0;
-    careLabel.y = -careUiState.labelGap - 6 * careUiState.scale;
-    if (careSparkleState.timer > 0) {
-      careSparkle.visible = true;
-      careSparkle.alpha = Math.min(1, careSparkleState.timer / 0.6);
-    } else {
-      careSparkle.visible = false;
-      careSparkle.alpha = 0;
-    }
   };
 
   const showToast = (text) => {
@@ -2305,7 +2107,11 @@ const initGame = ({ textures, gameRoot }) => {
     roomRight = Math.round(width * 0.82);
 
     wall.clear();
+<<<<<<< HEAD
     wall.beginFill(roomPalette.wall);
+=======
+    wall.beginFill(0xe6dfe1);
+>>>>>>> b42b826262a74648be86ec5b2cc0dbc9ed0f89ef
     wall.drawRect(0, 0, width, wallHeight);
     wall.endFill();
 
@@ -2330,6 +2136,7 @@ const initGame = ({ textures, gameRoot }) => {
     wallWindow.endFill();
 
     posterFrame.clear();
+<<<<<<< HEAD
     const posterWidth = Math.round(width * 0.18);
     const posterHeight = Math.round(posterWidth * 0.68);
     const posterX = Math.round(width * 0.18);
@@ -2424,6 +2231,31 @@ const initGame = ({ textures, gameRoot }) => {
     floorPlantLeaves.drawRect(plantBaseX + 12, plantBaseY - 36, 6, 20);
     floorPlantLeaves.drawRect(plantBaseX + 20, plantBaseY - 30, 6, 14);
     floorPlantLeaves.endFill();
+=======
+    posterFrame.visible = false;
+
+    wallShelf.clear();
+    shelfItems.clear();
+    wallShelf.visible = false;
+    shelfItems.visible = false;
+
+    floor.clear();
+    floor.beginFill(0xcbb8b1);
+    floor.drawRect(0, wallHeight, width, height - wallHeight);
+    floor.endFill();
+
+    floorMat.clear();
+    const matWidth = Math.round(Math.min(width, height) * 0.5);
+    const matHeight = Math.round(Math.min(width, height) * 0.1);
+    const matX = Math.round((width - matWidth) / 2);
+    const matY = Math.round(floorBottomY - matHeight * 0.8);
+    floorMat.beginFill(0xb9a7a1);
+    floorMat.drawRect(matX, matY, matWidth, matHeight);
+    floorMat.endFill();
+
+    rugDetail.clear();
+    rugDetail.visible = false;
+>>>>>>> b42b826262a74648be86ec5b2cc0dbc9ed0f89ef
 
     seam.clear();
     seam.visible = true;
