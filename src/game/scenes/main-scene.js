@@ -62,6 +62,27 @@ const initGame = ({ textures, gameRoot }) => {
     throw new Error("Pixi app not initialized.");
   }
   const rootElement = gameRoot;
+  const roomPalette = {
+    wall: 0xefe3d1,
+    wallShadow: 0xe7d8c5,
+    wallAccent: 0xf4eee6,
+    wallHover: 0xe9dece,
+    posterFrame: 0xd5c1ad,
+    posterInner: 0xf4eee6,
+    shelf: 0xc7b39c,
+    shelfEdge: 0x8e7863,
+    floor: 0xdac6ad,
+    floorLine: 0xd1bfa7,
+    mat: 0xd1bba1,
+    matBorder: 0xc3ac92,
+    ink: 0x7a6653,
+    accentWarm: 0x8f6b5a,
+    accentCool: 0x6b8c7a,
+    accentNeutral: 0x9f8a75,
+    plantPot: 0xc9b19a,
+    plantLeaf: 0x7f9a79,
+    plantLeafDark: 0x6f8f6b,
+  };
   Object.values(textures).forEach((texture) => {
     if (texture?.baseTexture) {
       texture.baseTexture.scaleMode = PIXI.SCALE_MODES.NEAREST;
@@ -73,18 +94,36 @@ const initGame = ({ textures, gameRoot }) => {
 
   const room = new PIXI.Container();
   const wall = new PIXI.Graphics();
+  const wallWindow = new PIXI.Graphics();
   const posterFrame = new PIXI.Graphics();
   const wallShelf = new PIXI.Graphics();
   const shelfItems = new PIXI.Graphics();
   const floor = new PIXI.Graphics();
   const floorMat = new PIXI.Graphics();
   const rugDetail = new PIXI.Graphics();
+  const floorPlant = new PIXI.Graphics();
+  const floorPlantLeaves = new PIXI.Graphics();
   const seam = new PIXI.Graphics();
   posterFrame.roundPixels = true;
+  wallWindow.roundPixels = true;
   wallShelf.roundPixels = true;
   shelfItems.roundPixels = true;
   rugDetail.roundPixels = true;
-  room.addChild(wall, posterFrame, wallShelf, shelfItems, floor, floorMat, rugDetail, seam);
+  floorPlant.roundPixels = true;
+  floorPlantLeaves.roundPixels = true;
+  room.addChild(
+    wall,
+    wallWindow,
+    posterFrame,
+    wallShelf,
+    shelfItems,
+    floor,
+    floorMat,
+    rugDetail,
+    floorPlant,
+    floorPlantLeaves,
+    seam,
+  );
   room.zIndex = 0;
   stage.addChild(room);
 
@@ -540,10 +579,10 @@ const initGame = ({ textures, gameRoot }) => {
       const fillWidth = Math.max(2, width * barRatio);
       const fillRadius = Math.min(radius, fillWidth / 2);
       bar.bg.clear();
-      bar.bg.beginFill(0xf4eee6, 0.9);
+      bar.bg.beginFill(settingsColors.panel, 0.9);
       bar.bg.drawRoundedRect(0, 0, width, height, radius);
       bar.bg.endFill();
-      bar.bg.lineStyle(1, 0x836f5a, 0.35);
+      bar.bg.lineStyle(1, settingsColors.panelBorder, 0.45);
       bar.bg.drawRoundedRect(0, 0, width, height, radius);
       bar.fill.clear();
       bar.fill.beginFill(getCareColor(barRatio), 0.95);
@@ -585,10 +624,10 @@ const initGame = ({ textures, gameRoot }) => {
     const width = Math.max(1, toastText.width) + toastLayout.paddingX * 2;
     const height = Math.max(1, toastText.height) + toastLayout.paddingY * 2;
     toastBg.clear();
-    toastBg.beginFill(0xf4eee6, 0.96);
+    toastBg.beginFill(settingsColors.panel, 0.96);
     toastBg.drawRoundedRect(-width / 2, -height / 2, width, height, toastLayout.radius);
     toastBg.endFill();
-    toastBg.lineStyle(1, 0x836f5a, 0.32);
+    toastBg.lineStyle(1, settingsColors.panelBorder, 0.4);
     toastBg.drawRoundedRect(-width / 2, -height / 2, width, height, toastLayout.radius);
     toastOverlay.x = toastLayout.x;
     toastOverlay.y = toastLayout.y + toastState.offset;
@@ -929,30 +968,31 @@ const initGame = ({ textures, gameRoot }) => {
   };
 
   const settingsColors = {
-    panel: 0xf3e9db,
-    panelBorder: 0xd6c6b2,
-    tabActive: 0xffffff,
-    tabIdle: 0xe2d5c4,
-    tabHover: 0xe9dece,
-    tabPressed: 0xd9cbb8,
+    panel: roomPalette.wallAccent,
+    panelBorder: roomPalette.matBorder,
+    tabActive: roomPalette.wallAccent,
+    tabIdle: roomPalette.wallShadow,
+    tabHover: roomPalette.wallHover,
+    tabPressed: roomPalette.matBorder,
     text: 0x111111,
     textMuted: 0x6b5f52,
-    track: 0xd8ccb9,
-    trackHover: 0xd0c2b0,
-    trackActive: 0xc6b7a5,
+    track: roomPalette.wallShadow,
+    trackHover: roomPalette.wallHover,
+    trackActive: roomPalette.matBorder,
     fill: 0x8a7c69,
     knob: 0x111111,
     knobActive: 0x2b2218,
-    buttonIdle: 0xe2d5c4,
-    buttonHover: 0xd7c9b6,
-    buttonPressed: 0xc9b9a2,
+    buttonIdle: roomPalette.wallShadow,
+    buttonHover: roomPalette.wallHover,
+    buttonPressed: roomPalette.matBorder,
     buttonActive: 0x8a7c69,
     buttonActiveText: 0xffffff,
-    toggleOff: 0xe2d5c4,
+    toggleOff: roomPalette.wallShadow,
     toggleOn: 0x8a7c69,
-    tileIdle: 0xe6d8c7,
-    tileActive: 0xc8b89f,
-    tileHover: 0xddcfbe,
+    tileIdle: roomPalette.wallShadow,
+    tileActive: roomPalette.matBorder,
+    tileHover: roomPalette.wallHover,
+    stroke: roomPalette.ink,
   };
 
   const settingsTabs = [
@@ -1851,8 +1891,8 @@ const initGame = ({ textures, gameRoot }) => {
     hintOverlay.y = Math.round(layout.top + 14 * scale);
 
     hintBackground.clear();
-    hintBackground.lineStyle(1, 0x111111, 1);
-    hintBackground.beginFill(0xf4eee6, 1);
+    hintBackground.lineStyle(1, settingsColors.stroke, 1);
+    hintBackground.beginFill(settingsColors.panel, 1);
     hintBackground.drawRect(-panelWidth / 2, 0, panelWidth, panelHeight);
     hintBackground.endFill();
 
@@ -1862,13 +1902,13 @@ const initGame = ({ textures, gameRoot }) => {
     hintClose.x = Math.round(panelWidth / 2 - paddingX - closeSize);
     hintClose.y = Math.round((panelHeight - closeSize) / 2);
     hintCloseBg.clear();
-    hintCloseBg.lineStyle(1, 0x111111, 1);
-    hintCloseBg.beginFill(0xf4eee6, 1);
+    hintCloseBg.lineStyle(1, settingsColors.stroke, 1);
+    hintCloseBg.beginFill(settingsColors.panel, 1);
     hintCloseBg.drawRect(0, 0, closeSize, closeSize);
     hintCloseBg.endFill();
     hintClose.hitArea = new PIXI.Rectangle(0, 0, closeSize, closeSize);
     hintCloseIcon.clear();
-    hintCloseIcon.lineStyle(Math.max(1, Math.round(scale)), 0x111111, 1);
+    hintCloseIcon.lineStyle(Math.max(1, Math.round(scale)), settingsColors.stroke, 1);
     const iconPadding = Math.max(2, Math.round(3 * scale));
     hintCloseIcon.moveTo(iconPadding, iconPadding);
     hintCloseIcon.lineTo(closeSize - iconPadding, closeSize - iconPadding);
@@ -2013,8 +2053,8 @@ const initGame = ({ textures, gameRoot }) => {
   let selectedCostume = "default";
   const updateCostumeSelection = () => {
     closetSlot.clear();
-    closetSlot.lineStyle(1, 0x111111, 0.22);
-    closetSlot.beginFill(0xf4eee6, 0.9);
+    closetSlot.lineStyle(1, settingsColors.stroke, 0.25);
+    closetSlot.beginFill(settingsColors.panel, 0.9);
     closetSlot.drawRoundedRect(0, 0, 82, 82, 10);
     closetSlot.endFill();
     closetSlotCheck.visible = selectedCostume === "default";
@@ -2265,22 +2305,42 @@ const initGame = ({ textures, gameRoot }) => {
     roomRight = Math.round(width * 0.82);
 
     wall.clear();
-    wall.beginFill(0xefe3d1);
+    wall.beginFill(roomPalette.wall);
     wall.drawRect(0, 0, width, wallHeight);
     wall.endFill();
+
+    wallWindow.clear();
+    const windowWidth = Math.round(width * 0.14);
+    const windowHeight = Math.round(windowWidth * 1.1);
+    const windowX = Math.round(width * 0.43);
+    const windowY = Math.round(wallHeight * 0.16);
+    wallWindow.beginFill(roomPalette.wallShadow, 1);
+    wallWindow.drawRect(windowX, windowY, windowWidth, windowHeight);
+    wallWindow.endFill();
+    wallWindow.beginFill(roomPalette.wallAccent, 1);
+    wallWindow.drawRect(windowX + 3, windowY + 3, windowWidth - 6, windowHeight - 6);
+    wallWindow.endFill();
+    wallWindow.lineStyle(1, roomPalette.ink, 0.6);
+    wallWindow.moveTo(windowX + Math.round(windowWidth / 2), windowY + 4);
+    wallWindow.lineTo(windowX + Math.round(windowWidth / 2), windowY + windowHeight - 4);
+    wallWindow.moveTo(windowX + 4, windowY + Math.round(windowHeight / 2));
+    wallWindow.lineTo(windowX + windowWidth - 4, windowY + Math.round(windowHeight / 2));
+    wallWindow.beginFill(roomPalette.shelf, 1);
+    wallWindow.drawRect(windowX, windowY + windowHeight + 4, windowWidth, 5);
+    wallWindow.endFill();
 
     posterFrame.clear();
     const posterWidth = Math.round(width * 0.18);
     const posterHeight = Math.round(posterWidth * 0.68);
     const posterX = Math.round(width * 0.18);
     const posterY = Math.round(wallHeight * 0.18);
-    posterFrame.beginFill(0xd5c1ad, 1);
+    posterFrame.beginFill(roomPalette.posterFrame, 1);
     posterFrame.drawRect(posterX, posterY, posterWidth, posterHeight);
     posterFrame.endFill();
-    posterFrame.beginFill(0xf4eee6, 1);
+    posterFrame.beginFill(roomPalette.posterInner, 1);
     posterFrame.drawRect(posterX + 3, posterY + 3, posterWidth - 6, posterHeight - 6);
     posterFrame.endFill();
-    posterFrame.lineStyle(1, 0x7a6653, 1);
+    posterFrame.lineStyle(1, roomPalette.ink, 1);
     posterFrame.moveTo(posterX + 8, posterY + 12);
     posterFrame.lineTo(posterX + posterWidth - 8, posterY + 12);
     posterFrame.moveTo(posterX + 8, posterY + posterHeight - 10);
@@ -2292,34 +2352,34 @@ const initGame = ({ textures, gameRoot }) => {
     const shelfHeight = 6;
     const shelfX = Math.round(width * 0.62);
     const shelfY = Math.round(wallHeight * 0.3);
-    wallShelf.beginFill(0xc7b39c, 1);
+    wallShelf.beginFill(roomPalette.shelf, 1);
     wallShelf.drawRect(shelfX, shelfY, shelfWidth, shelfHeight);
     wallShelf.endFill();
-    wallShelf.lineStyle(1, 0x8e7863, 1);
+    wallShelf.lineStyle(1, roomPalette.shelfEdge, 1);
     wallShelf.moveTo(shelfX, shelfY + shelfHeight);
     wallShelf.lineTo(shelfX + shelfWidth, shelfY + shelfHeight);
     const bookWidth = Math.round(shelfWidth * 0.22);
     const bookHeight = 14;
     const bookX = shelfX + 8;
     const bookY = shelfY - bookHeight;
-    shelfItems.beginFill(0x8f6b5a, 1);
+    shelfItems.beginFill(roomPalette.accentWarm, 1);
     shelfItems.drawRect(bookX, bookY, bookWidth, bookHeight);
     shelfItems.endFill();
-    shelfItems.beginFill(0x6b8c7a, 1);
+    shelfItems.beginFill(roomPalette.accentCool, 1);
     shelfItems.drawRect(bookX + bookWidth + 6, bookY + 4, 12, 10);
     shelfItems.endFill();
-    shelfItems.beginFill(0x9f8a75, 1);
+    shelfItems.beginFill(roomPalette.accentNeutral, 1);
     shelfItems.drawRect(shelfX + shelfWidth - 20, shelfY - 8, 14, 8);
     shelfItems.endFill();
-    shelfItems.beginFill(0x6f8f6b, 1);
+    shelfItems.beginFill(roomPalette.plantLeafDark, 1);
     shelfItems.drawRect(shelfX + shelfWidth - 18, shelfY - 14, 10, 6);
     shelfItems.endFill();
 
     floor.clear();
-    floor.beginFill(0xdac6ad);
+    floor.beginFill(roomPalette.floor);
     floor.drawRect(0, wallHeight, width, height - wallHeight);
     floor.endFill();
-    floor.lineStyle(1, 0xd1bfa7, 0.08);
+    floor.lineStyle(1, roomPalette.floorLine, 0.08);
     const plankStartY = Math.round(wallHeight + 12);
     const plankGap = Math.max(26, Math.round(height * 0.06));
     for (let y = plankStartY; y < height - 6; y += plankGap) {
@@ -2329,26 +2389,47 @@ const initGame = ({ textures, gameRoot }) => {
     }
 
     floorMat.clear();
-    const matWidth = Math.round(Math.min(width, height) * 0.58);
-    const matHeight = Math.round(Math.min(width, height) * 0.12);
-    const matX = Math.round(width / 2);
-    const matY = Math.round(floorBottomY - matHeight * 0.55);
-    floorMat.beginFill(0xd1bba1);
-    floorMat.drawEllipse(matX, matY, matWidth / 2, matHeight / 2);
+    const matSize = Math.round(Math.min(width, height) * 0.32);
+    const matX = Math.round(width / 2 - matSize / 2);
+    const matY = Math.round(floorBottomY - matSize * 0.7);
+    floorMat.beginFill(roomPalette.mat);
+    floorMat.drawRect(matX, matY, matSize, matSize);
     floorMat.endFill();
 
     rugDetail.clear();
-    rugDetail.lineStyle(1, 0xc3ac92, 1);
-    rugDetail.drawEllipse(matX, matY, matWidth * 0.38, matHeight * 0.32);
-    const stripeWidth = Math.round(matWidth * 0.28);
-    const stripeOffset = Math.round(matHeight * 0.16);
-    rugDetail.moveTo(matX - stripeWidth / 2, matY - stripeOffset);
-    rugDetail.lineTo(matX + stripeWidth / 2, matY - stripeOffset);
-    rugDetail.moveTo(matX - stripeWidth / 2, matY + stripeOffset);
-    rugDetail.lineTo(matX + stripeWidth / 2, matY + stripeOffset);
+    rugDetail.lineStyle(1, roomPalette.matBorder, 1);
+    const inset = Math.max(6, Math.round(matSize * 0.12));
+    rugDetail.drawRect(matX + inset, matY + inset, matSize - inset * 2, matSize - inset * 2);
+    const stripeYTop = Math.round(matY + matSize * 0.34);
+    const stripeYBottom = Math.round(matY + matSize * 0.66);
+    rugDetail.moveTo(matX + inset, stripeYTop);
+    rugDetail.lineTo(matX + matSize - inset, stripeYTop);
+    rugDetail.moveTo(matX + inset, stripeYBottom);
+    rugDetail.lineTo(matX + matSize - inset, stripeYBottom);
+
+    floorPlant.clear();
+    floorPlantLeaves.clear();
+    const plantBaseX = Math.round(roomRight - width * 0.14);
+    const plantBaseY = Math.round(floorBottomY - 18);
+    const potWidth = 26;
+    const potHeight = 16;
+    floorPlant.beginFill(roomPalette.plantPot, 1);
+    floorPlant.drawRect(plantBaseX, plantBaseY - potHeight, potWidth, potHeight);
+    floorPlant.endFill();
+    floorPlant.lineStyle(1, roomPalette.ink, 0.25);
+    floorPlant.moveTo(plantBaseX, plantBaseY - 2);
+    floorPlant.lineTo(plantBaseX + potWidth, plantBaseY - 2);
+    floorPlantLeaves.beginFill(roomPalette.plantLeaf, 1);
+    floorPlantLeaves.drawRect(plantBaseX + 4, plantBaseY - 30, 6, 14);
+    floorPlantLeaves.drawRect(plantBaseX + 12, plantBaseY - 36, 6, 20);
+    floorPlantLeaves.drawRect(plantBaseX + 20, plantBaseY - 30, 6, 14);
+    floorPlantLeaves.endFill();
 
     seam.clear();
-    seam.visible = false;
+    seam.visible = true;
+    seam.lineStyle(2, roomPalette.floorLine, 0.35);
+    seam.moveTo(0, wallHeight);
+    seam.lineTo(width, wallHeight);
   };
 
   const getBaseY = (depth) => {
@@ -2550,15 +2631,15 @@ const initGame = ({ textures, gameRoot }) => {
     closetLayer.hitArea = new PIXI.Rectangle(0, 0, width, height);
     closetBackground.clear();
     const closetWallHeight = Math.round(height * 0.62);
-    closetBackground.beginFill(0xe9d7c2);
+    closetBackground.beginFill(roomPalette.wall);
     closetBackground.drawRect(0, 0, width, closetWallHeight);
     closetBackground.endFill();
 
     closetFloor.clear();
-    closetFloor.beginFill(0xd6c2ab);
+    closetFloor.beginFill(roomPalette.floor);
     closetFloor.drawRect(0, closetWallHeight, width, height - closetWallHeight);
     closetFloor.endFill();
-    closetFloor.lineStyle(1, 0xcbb79f, 0.2);
+    closetFloor.lineStyle(1, roomPalette.floorLine, 0.2);
     const floorLineY = closetWallHeight + 12;
     for (let y = floorLineY; y < height; y += 36) {
       closetFloor.moveTo(0, y);
@@ -2566,7 +2647,7 @@ const initGame = ({ textures, gameRoot }) => {
     }
 
     closetTrim.clear();
-    closetTrim.lineStyle(2, 0xbfa991, 0.35);
+    closetTrim.lineStyle(2, roomPalette.matBorder, 0.35);
     closetTrim.moveTo(0, closetWallHeight);
     closetTrim.lineTo(width, closetWallHeight);
 
@@ -2574,7 +2655,7 @@ const initGame = ({ textures, gameRoot }) => {
     const shelfWidth = width * 0.5;
     const shelfX = width * 0.25;
     const shelfY = height * 0.2;
-    closetShelf.beginFill(0xdac5ad, 0.9);
+    closetShelf.beginFill(roomPalette.shelf, 0.9);
     closetShelf.drawRoundedRect(shelfX, shelfY, shelfWidth, 8, 4);
     closetShelf.endFill();
 
@@ -2588,7 +2669,7 @@ const initGame = ({ textures, gameRoot }) => {
     const spotlightBottomWidth = width * 0.18;
     const spotlightHeight = height * 0.8;
     closetSpotlight.clear();
-    closetSpotlight.beginFill(0xffffff, 0.08);
+    closetSpotlight.beginFill(roomPalette.wallAccent, 0.12);
     closetSpotlight.moveTo(-spotlightTopWidth / 2, 0);
     closetSpotlight.lineTo(spotlightTopWidth / 2, 0);
     closetSpotlight.lineTo(spotlightBottomWidth / 2, spotlightHeight);
