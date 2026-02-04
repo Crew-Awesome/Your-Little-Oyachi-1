@@ -63,22 +63,24 @@ const initGame = ({ textures, gameRoot }) => {
   }
   const rootElement = gameRoot;
   const roomPalette = {
-    wall: 0xdfe3e2,
-    wallShadow: 0xd6dbda,
-    wallAccent: 0xe9eded,
-    wallHover: 0xd2d7d6,
-    posterFrame: 0xc6ccca,
-    posterInner: 0xe9eded,
-    shelf: 0xc4c9c8,
-    shelfEdge: 0xa8aeac,
-    floor: 0xd1d5d4,
-    floorLine: 0xc5cac9,
-    mat: 0xc9cecd,
-    matBorder: 0xb8bdbc,
-    ink: 0x7f8686,
-    accentWarm: 0xa9a19a,
-    accentCool: 0x9aa3a5,
-    accentNeutral: 0xb1b5b3,
+    wall: 0xf2e4ea,
+    wallShadow: 0xe4d3db,
+    wallAccent: 0xf7eef1,
+    wallHover: 0xe6d0da,
+    posterFrame: 0xd9c2cc,
+    posterInner: 0xf7eef1,
+    shelf: 0xdec7d1,
+    shelfEdge: 0xc7b1bc,
+    floorCool: 0xe3d5df,
+    floorMid: 0xeacfd9,
+    floorWarm: 0xf0d6df,
+    floorLine: 0xddc5d1,
+    mat: 0xf3dbe4,
+    matBorder: 0xddbfcd,
+    ink: 0x7a6a74,
+    accentWarm: 0xe3c4d0,
+    accentCool: 0xd7c6d1,
+    accentNeutral: 0xe0cdd6,
   };
   Object.values(textures).forEach((texture) => {
     if (texture?.baseTexture) {
@@ -763,20 +765,20 @@ const initGame = ({ textures, gameRoot }) => {
     tabHover: roomPalette.wallHover,
     tabPressed: roomPalette.matBorder,
     text: 0x111111,
-    textMuted: 0x6b5f52,
+    textMuted: 0x7a6772,
     track: roomPalette.wallShadow,
     trackHover: roomPalette.wallHover,
     trackActive: roomPalette.matBorder,
-    fill: 0x8a7c69,
+    fill: 0xd2a7ba,
     knob: 0x111111,
-    knobActive: 0x2b2218,
+    knobActive: 0x4a3742,
     buttonIdle: roomPalette.wallShadow,
     buttonHover: roomPalette.wallHover,
     buttonPressed: roomPalette.matBorder,
-    buttonActive: 0x8a7c69,
+    buttonActive: 0xd2a7ba,
     buttonActiveText: 0xffffff,
     toggleOff: roomPalette.wallShadow,
-    toggleOn: 0x8a7c69,
+    toggleOn: 0xd2a7ba,
     tileIdle: roomPalette.wallShadow,
     tileActive: roomPalette.matBorder,
     tileHover: roomPalette.wallHover,
@@ -2057,6 +2059,25 @@ const initGame = ({ textures, gameRoot }) => {
     heartPool.push(createHeartGraphic());
   }
 
+  let floorGradientTexture = null;
+  const toCssColor = (value) => `#${value.toString(16).padStart(6, "0")}`;
+  const createFloorGradientTexture = (floorHeight) => {
+    const canvas = document.createElement("canvas");
+    canvas.width = 4;
+    canvas.height = Math.max(2, Math.round(floorHeight));
+    const ctx = canvas.getContext("2d");
+    if (!ctx) {
+      return null;
+    }
+    const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
+    gradient.addColorStop(0, toCssColor(roomPalette.floorCool));
+    gradient.addColorStop(0.55, toCssColor(roomPalette.floorMid));
+    gradient.addColorStop(1, toCssColor(roomPalette.floorWarm));
+    ctx.fillStyle = gradient;
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    return PIXI.Texture.from(canvas);
+  };
+
   const drawRoom = () => {
     const { width, height } = app.renderer;
     const wallHeight = Math.round(height * 0.68);
@@ -2108,9 +2129,28 @@ const initGame = ({ textures, gameRoot }) => {
     shelfItems.endFill();
 
     floor.clear();
-    floor.beginFill(roomPalette.floor);
-    floor.drawRect(0, wallHeight, width, height - wallHeight);
-    floor.endFill();
+    const floorHeight = height - wallHeight;
+    if (floorGradientTexture) {
+      floorGradientTexture.destroy(true);
+      floorGradientTexture = null;
+    }
+    floorGradientTexture = createFloorGradientTexture(floorHeight);
+    if (floorGradientTexture) {
+      floorGradientTexture.baseTexture.scaleMode = PIXI.SCALE_MODES.LINEAR;
+      const floorMatrix = new PIXI.Matrix();
+      floorMatrix.scale(
+        width / Math.max(1, floorGradientTexture.width),
+        floorHeight / Math.max(1, floorGradientTexture.height),
+      );
+      floorMatrix.translate(0, wallHeight);
+      floor.beginTextureFill({ texture: floorGradientTexture, matrix: floorMatrix });
+      floor.drawRect(0, wallHeight, width, floorHeight);
+      floor.endFill();
+    } else {
+      floor.beginFill(roomPalette.floorWarm);
+      floor.drawRect(0, wallHeight, width, floorHeight);
+      floor.endFill();
+    }
     floor.lineStyle(1, roomPalette.floorLine, 0.08);
     const plankStartY = Math.round(wallHeight + 12);
     const plankGap = Math.max(26, Math.round(height * 0.06));
@@ -2121,22 +2161,20 @@ const initGame = ({ textures, gameRoot }) => {
     }
 
     floorMat.clear();
-    const matRadius = Math.round(Math.min(width, height) * 0.16);
+    const matRadiusX = Math.round(Math.min(width, height) * 0.22);
+    const matRadiusY = Math.round(matRadiusX * 0.58);
     const matX = Math.round(width / 2);
-    const matY = Math.round(floorBottomY - matRadius * 0.6);
+    const matY = Math.round(floorBottomY - matRadiusY * 0.45);
     floorMat.beginFill(roomPalette.mat);
-    floorMat.drawEllipse(matX, matY, matRadius, matRadius);
+    floorMat.drawEllipse(matX, matY, matRadiusX, matRadiusY);
     floorMat.endFill();
 
     rugDetail.clear();
     rugDetail.lineStyle(1, roomPalette.matBorder, 0.8);
-    rugDetail.drawEllipse(matX, matY, matRadius * 0.68, matRadius * 0.68);
+    rugDetail.drawEllipse(matX, matY, matRadiusX * 0.78, matRadiusY * 0.78);
 
     seam.clear();
-    seam.visible = true;
-    seam.lineStyle(2, roomPalette.floorLine, 0.3);
-    seam.moveTo(0, wallHeight);
-    seam.lineTo(width, wallHeight);
+    seam.visible = false;
   };
 
   const getBaseY = (depth) => {
@@ -2342,7 +2380,7 @@ const initGame = ({ textures, gameRoot }) => {
     closetBackground.endFill();
 
     closetFloor.clear();
-    closetFloor.beginFill(roomPalette.floor);
+    closetFloor.beginFill(roomPalette.floorWarm);
     closetFloor.drawRect(0, closetWallHeight, width, height - closetWallHeight);
     closetFloor.endFill();
     closetFloor.lineStyle(1, roomPalette.floorLine, 0.2);
