@@ -12,7 +12,7 @@ AI agents must keep AGENTS.md files continuously updated whenever they change co
 ## Key Files
 
 ### `main-scene.js`
-**Purpose:** Complete game implementation (3116 lines)
+**Purpose:** Complete game implementation (~3k lines)
 
 **Exported Function:**
 ```javascript
@@ -45,7 +45,7 @@ export const createMainScene = ({ textures, gameRoot }) => initGame({ textures, 
    - Visibility toggled via `setSpriteVisibility(name)`
    - All sprites share `baseSpriteScale` (0.6)
    - `react_ayo` uses `react_surprised` for a quick surprised reaction
-   - `react_stretch` used on wake, `react_shy` used for bestie streaks
+   - `react_stretch` used on wake
 
 4. **Room Rendering**:
    - `drawRoom()`: Draws wall, floor, floorMat, seam
@@ -78,14 +78,12 @@ export const createMainScene = ({ textures, gameRoot }) => initGame({ textures, 
 8. **Main Ticker Loop**:
    - Updates every frame (~60fps)
    - Handles all animations, physics, state transitions
-   - Updates UI (hints, now-playing, care bar, toast popups, spotlight)
+   - Updates UI (hints, now-playing, toast popups, spotlight)
 
-9. **Care System**:
-   - Single care meter (0-100) decays over time
-   - Petting and ball play refill care
-   - Low care accelerates tiredness and triggers attention hints
-   - Session streak rewards when care stays high
-   - UI shows stacked Energy/Comfort/Fun bars with icons
+9. **Ambient Companion Focus**:
+   - No stats, meters, or progression loops
+   - Doing nothing is always valid; behavior is presence-driven
+   - Interactions exist for expression (petting, toys, greetings)
 
 10. **No-asset Fun Loops**:
    - Ball nudges when idle to invite play
@@ -93,7 +91,6 @@ export const createMainScene = ({ textures, gameRoot }) => initGame({ textures, 
    - Gratitude hearts on long-hold reaction
    - Affection bias: frequent pets make Oyachi move toward the last pet location
    - Play rhythm: repeated throws shorten return timing
-   - Bestie streak toast every third care streak
 
 ## State Machine Details
 

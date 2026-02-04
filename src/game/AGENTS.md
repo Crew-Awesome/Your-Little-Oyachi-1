@@ -21,11 +21,11 @@ AI agents must keep AGENTS.md files continuously updated whenever they change co
   - Returns context with `stage` and `setGameStarted()` callback
 
 ### Main Scene
-- **`scenes/main-scene.js`**: Complete game logic (3116 lines)
+- **`scenes/main-scene.js`**: Complete game logic (~3k lines)
   - All Oyachi states and behaviors
   - Ball physics and interaction
-  - Care system (single meter, prompts, streak)
-  - Toast popups (care streak, catch milestones)
+  - Ambient companion flow (presence-first, no maintenance loops)
+  - Toast popups (greetings, playful moments)
   - Affection/throw rhythm tweaks for returning play
   - Daily greeting ritual (stored in localStorage)
   - Input handling (petting, dragging)
@@ -87,10 +87,10 @@ Helper utilities
 - Multi-touch safe via `getPointerId()` utility
 - Drag outside canvas handled gracefully
 
-### No Redesign Rule
-- Do not change core gameplay mechanics
-- Preserve visual style and balance
-- Only add, never remove or fundamentally alter existing features
+### Ambient Focus Rule
+- Preserve the presence-first, system-free companion feel
+- Avoid adding meters, maintenance loops, or progression pressure
+- Keep interactions expressive rather than goal-driven
 
 ## Safe Modification Guidelines
 

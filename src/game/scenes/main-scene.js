@@ -443,7 +443,6 @@ const initGame = ({ textures, gameRoot }) => {
     costumes: { text: "Tap costumes to dress Oyachi", cooldownMs: 30000, chance: 0.6 },
     fullscreen: { text: "Tap fullscreen for a bigger view", cooldownMs: 32000, chance: 0.55 },
     settings: { text: "Settings are in the corner", cooldownMs: 32000, chance: 0.55 },
-    attention: { text: "Oyachi wants attention", cooldownMs: 26000, chance: 1 },
     test: { text: "Hint test: Oyachi is listening.", cooldownMs: 0, chance: 1 },
   };
 
@@ -513,11 +512,7 @@ const initGame = ({ textures, gameRoot }) => {
         return false;
       }
     }
-    const hintMessage =
-      id === "attention" && careState.value <= careConfig.lowThreshold
-        ? "Oyachi misses you"
-        : config.text;
-    hintText.text = hintMessage;
+    hintText.text = config.text;
     hintOverlay.alpha = 0;
     hintOverlay.visible = true;
     updateHintLayout(getLayoutBounds());
@@ -2080,11 +2075,7 @@ const initGame = ({ textures, gameRoot }) => {
     roomRight = Math.round(width * 0.82);
 
     wall.clear();
-<<<<<<< HEAD
     wall.beginFill(roomPalette.wall);
-=======
-    wall.beginFill(0xe6dfe1);
->>>>>>> b42b826262a74648be86ec5b2cc0dbc9ed0f89ef
     wall.drawRect(0, 0, width, wallHeight);
     wall.endFill();
 
@@ -2109,7 +2100,6 @@ const initGame = ({ textures, gameRoot }) => {
     wallWindow.endFill();
 
     posterFrame.clear();
-<<<<<<< HEAD
     const posterWidth = Math.round(width * 0.18);
     const posterHeight = Math.round(posterWidth * 0.68);
     const posterX = Math.round(width * 0.18);
@@ -2204,31 +2194,6 @@ const initGame = ({ textures, gameRoot }) => {
     floorPlantLeaves.drawRect(plantBaseX + 12, plantBaseY - 36, 6, 20);
     floorPlantLeaves.drawRect(plantBaseX + 20, plantBaseY - 30, 6, 14);
     floorPlantLeaves.endFill();
-=======
-    posterFrame.visible = false;
-
-    wallShelf.clear();
-    shelfItems.clear();
-    wallShelf.visible = false;
-    shelfItems.visible = false;
-
-    floor.clear();
-    floor.beginFill(0xcbb8b1);
-    floor.drawRect(0, wallHeight, width, height - wallHeight);
-    floor.endFill();
-
-    floorMat.clear();
-    const matWidth = Math.round(Math.min(width, height) * 0.5);
-    const matHeight = Math.round(Math.min(width, height) * 0.1);
-    const matX = Math.round((width - matWidth) / 2);
-    const matY = Math.round(floorBottomY - matHeight * 0.8);
-    floorMat.beginFill(0xb9a7a1);
-    floorMat.drawRect(matX, matY, matWidth, matHeight);
-    floorMat.endFill();
-
-    rugDetail.clear();
-    rugDetail.visible = false;
->>>>>>> b42b826262a74648be86ec5b2cc0dbc9ed0f89ef
 
     seam.clear();
     seam.visible = true;
@@ -2382,7 +2347,6 @@ const initGame = ({ textures, gameRoot }) => {
     const gearMargin = 24 * marginScale;
     settingsButton.container.x = Math.round(clamp(left + gearMargin, safeLeft, safeRight));
     settingsButton.container.y = Math.round(clamp(top + gearMargin, safeTop, safeBottom));
-    updateCareUiLayout(layout);
     const fullscreenMargin = 24 * marginScale;
     fullscreenButton.container.x = Math.round(clamp(right - fullscreenMargin, safeLeft, safeRight));
     fullscreenButton.container.y = Math.round(clamp(top + fullscreenMargin, safeTop, safeBottom));
@@ -2684,7 +2648,6 @@ const initGame = ({ textures, gameRoot }) => {
       petType = "gentle";
     }
     spawnHeart(petType, { force: true });
-    addCare(careConfig.petBoost);
     if (activeHearts.length === 0) {
       const baseY = getBaseY(state.depth);
       forceSpawnHeartAt(oyachi.x, Math.min(baseY - 40, baseY - 1));
@@ -3247,64 +3210,6 @@ const initGame = ({ textures, gameRoot }) => {
       updateToastUi();
     }
 
-    careState.value = clamp(
-      careState.value - careConfig.decayPerSecond * deltaSeconds,
-      careConfig.min,
-      careConfig.max,
-    );
-    const isPlayingToy =
-      ballState.active &&
-      (ballState.dragging ||
-        ballState.isAirborne ||
-        Math.abs(ballState.velocityX) > 20);
-    if (isPlayingToy) {
-      addCare(careConfig.playBoostPerSecond * deltaSeconds);
-    }
-    if (careSparkleState.timer > 0) {
-      careSparkleState.timer = Math.max(0, careSparkleState.timer - deltaSeconds);
-    }
-    if (careState.value <= careConfig.criticalThreshold) {
-      if (!careState.criticalPrompted) {
-        showHint("attention", { priority: true });
-        careState.criticalPrompted = true;
-      }
-    } else if (careState.value > careConfig.criticalThreshold + 8) {
-      careState.criticalPrompted = false;
-    }
-    if (careState.value <= careConfig.lowThreshold) {
-      if (!careState.lowPrompted) {
-        showHint("attention");
-        careState.lowPrompted = true;
-      }
-    } else if (careState.value > careConfig.lowThreshold + 10) {
-      careState.lowPrompted = false;
-    }
-    if (careState.value >= careConfig.streakThreshold) {
-      careState.streakTimer += deltaSeconds;
-        if (careState.streakTimer >= careConfig.streakSeconds) {
-          careState.streakTimer = 0;
-          careState.streakCount += 1;
-          for (let i = 0; i < 2; i += 1) {
-            spawnHeart("excited", { force: true, ignoreCooldown: true });
-          }
-          if (careState.streakCount % 3 === 0) {
-            showToast("Bestie streak!");
-            for (let i = 0; i < 3; i += 1) {
-              spawnHeart("excited", { force: true, ignoreCooldown: true });
-            }
-            setSpriteOverride("react_shy");
-            state.reactSquishTimer = 0;
-            state.reactTimer = 0.9;
-            careSparkleState.timer = 1.2;
-          } else {
-            showToast(`Care streak +${careState.streakCount}`);
-          }
-        }
-    } else {
-      careState.streakTimer = 0;
-    }
-    updateCareUi();
-
     updateHint(deltaSeconds);
     if (closetOpen) {
       closetSpotlightState.timer += deltaSeconds;
@@ -3314,12 +3219,7 @@ const initGame = ({ textures, gameRoot }) => {
     }
     state.timer = Math.max(state.timer - delta, 0);
     if (state.current !== "sleep") {
-      const careFatigue =
-        careState.value <= careConfig.lowThreshold
-          ? 1 +
-            ((careConfig.lowThreshold - careState.value) / careConfig.lowThreshold) * 1.2
-          : 1;
-      state.inactiveTime += deltaSeconds * careFatigue;
+      state.inactiveTime += deltaSeconds;
     }
 
     if (petHoldActive && state.current !== "happy_jump_sequence") {
@@ -3360,12 +3260,10 @@ const initGame = ({ textures, gameRoot }) => {
     }
 
     const idleChance = Math.random();
-    const moodRatio = careState.value / Math.max(1, careConfig.max);
     if (state.current === "idle") {
       state.idleTimer -= delta;
       if (state.idleTimer <= 0) {
-        const tiredDelay = idleBehavior.tiredDelay * (moodRatio < 0.4 ? 0.8 : 1);
-        if (state.inactiveTime >= tiredDelay) {
+        if (state.inactiveTime >= idleBehavior.tiredDelay) {
           setState("idle_tired");
           state.tiredTimer = idleBehavior.sleepDelay;
           showSprite("idle_tired");
@@ -3393,7 +3291,6 @@ const initGame = ({ textures, gameRoot }) => {
       state.current === "idle" &&
       !closetOpen &&
       !petHoldActive &&
-      moodRatio > 0.6 &&
       state.inactiveTime < idleBehavior.tiredDelay * 0.7
     ) {
       zoomiesState.cooldown -= deltaSeconds;
@@ -3402,14 +3299,12 @@ const initGame = ({ textures, gameRoot }) => {
         showToast("Zoomies!");
       }
     }
-    if (state.current === "idle" && moodRatio > 0.75) {
+    if (state.current === "idle") {
       moodState.idleHeartTimer -= deltaSeconds;
       if (moodState.idleHeartTimer <= 0) {
         spawnHeart("gentle");
         moodState.idleHeartTimer = 6 + Math.random() * 8;
       }
-    } else if (moodRatio <= 0.6) {
-      moodState.idleHeartTimer = 0;
     }
 
     if (state.current === "idle_tired") {
@@ -4078,9 +3973,6 @@ const initGame = ({ textures, gameRoot }) => {
         return;
       }
       gameStarted = true;
-      careOverlay.visible = true;
-      updateCareUiLayout(getLayoutBounds());
-      updateCareUi();
       const now = performance.now();
       markHintsSeen();
       const todayKey = getTodayKey();
