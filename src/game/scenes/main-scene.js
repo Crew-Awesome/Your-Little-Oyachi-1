@@ -63,25 +63,22 @@ const initGame = ({ textures, gameRoot }) => {
   }
   const rootElement = gameRoot;
   const roomPalette = {
-    wall: 0xefe3d1,
-    wallShadow: 0xe7d8c5,
-    wallAccent: 0xf4eee6,
-    wallHover: 0xe9dece,
-    posterFrame: 0xd5c1ad,
-    posterInner: 0xf4eee6,
-    shelf: 0xc7b39c,
-    shelfEdge: 0x8e7863,
-    floor: 0xdac6ad,
-    floorLine: 0xd1bfa7,
-    mat: 0xd1bba1,
-    matBorder: 0xc3ac92,
-    ink: 0x7a6653,
-    accentWarm: 0x8f6b5a,
-    accentCool: 0x6b8c7a,
-    accentNeutral: 0x9f8a75,
-    plantPot: 0xc9b19a,
-    plantLeaf: 0x7f9a79,
-    plantLeafDark: 0x6f8f6b,
+    wall: 0xdfe3e2,
+    wallShadow: 0xd6dbda,
+    wallAccent: 0xe9eded,
+    wallHover: 0xd2d7d6,
+    posterFrame: 0xc6ccca,
+    posterInner: 0xe9eded,
+    shelf: 0xc4c9c8,
+    shelfEdge: 0xa8aeac,
+    floor: 0xd1d5d4,
+    floorLine: 0xc5cac9,
+    mat: 0xc9cecd,
+    matBorder: 0xb8bdbc,
+    ink: 0x7f8686,
+    accentWarm: 0xa9a19a,
+    accentCool: 0x9aa3a5,
+    accentNeutral: 0xb1b5b3,
   };
   Object.values(textures).forEach((texture) => {
     if (texture?.baseTexture) {
@@ -101,16 +98,12 @@ const initGame = ({ textures, gameRoot }) => {
   const floor = new PIXI.Graphics();
   const floorMat = new PIXI.Graphics();
   const rugDetail = new PIXI.Graphics();
-  const floorPlant = new PIXI.Graphics();
-  const floorPlantLeaves = new PIXI.Graphics();
   const seam = new PIXI.Graphics();
   posterFrame.roundPixels = true;
   wallWindow.roundPixels = true;
   wallShelf.roundPixels = true;
   shelfItems.roundPixels = true;
   rugDetail.roundPixels = true;
-  floorPlant.roundPixels = true;
-  floorPlantLeaves.roundPixels = true;
   room.addChild(
     wall,
     wallWindow,
@@ -120,8 +113,6 @@ const initGame = ({ textures, gameRoot }) => {
     floor,
     floorMat,
     rugDetail,
-    floorPlant,
-    floorPlantLeaves,
     seam,
   );
   room.zIndex = 0;
@@ -2080,69 +2071,40 @@ const initGame = ({ textures, gameRoot }) => {
     wall.endFill();
 
     wallWindow.clear();
-    const windowWidth = Math.round(width * 0.14);
-    const windowHeight = Math.round(windowWidth * 1.1);
-    const windowX = Math.round(width * 0.43);
-    const windowY = Math.round(wallHeight * 0.16);
+    const windowWidth = Math.round(width * 0.1);
+    const windowHeight = Math.round(windowWidth * 0.9);
+    const windowX = Math.round(width * 0.46);
+    const windowY = Math.round(wallHeight * 0.2);
     wallWindow.beginFill(roomPalette.wallShadow, 1);
     wallWindow.drawRect(windowX, windowY, windowWidth, windowHeight);
     wallWindow.endFill();
     wallWindow.beginFill(roomPalette.wallAccent, 1);
     wallWindow.drawRect(windowX + 3, windowY + 3, windowWidth - 6, windowHeight - 6);
     wallWindow.endFill();
-    wallWindow.lineStyle(1, roomPalette.ink, 0.6);
-    wallWindow.moveTo(windowX + Math.round(windowWidth / 2), windowY + 4);
-    wallWindow.lineTo(windowX + Math.round(windowWidth / 2), windowY + windowHeight - 4);
-    wallWindow.moveTo(windowX + 4, windowY + Math.round(windowHeight / 2));
-    wallWindow.lineTo(windowX + windowWidth - 4, windowY + Math.round(windowHeight / 2));
-    wallWindow.beginFill(roomPalette.shelf, 1);
-    wallWindow.drawRect(windowX, windowY + windowHeight + 4, windowWidth, 5);
-    wallWindow.endFill();
 
     posterFrame.clear();
-    const posterWidth = Math.round(width * 0.18);
-    const posterHeight = Math.round(posterWidth * 0.68);
-    const posterX = Math.round(width * 0.18);
-    const posterY = Math.round(wallHeight * 0.18);
+    const posterWidth = Math.round(width * 0.14);
+    const posterHeight = Math.round(posterWidth * 0.7);
+    const posterX = Math.round(width * 0.2);
+    const posterY = Math.round(wallHeight * 0.2);
     posterFrame.beginFill(roomPalette.posterFrame, 1);
     posterFrame.drawRect(posterX, posterY, posterWidth, posterHeight);
     posterFrame.endFill();
     posterFrame.beginFill(roomPalette.posterInner, 1);
     posterFrame.drawRect(posterX + 3, posterY + 3, posterWidth - 6, posterHeight - 6);
     posterFrame.endFill();
-    posterFrame.lineStyle(1, roomPalette.ink, 1);
-    posterFrame.moveTo(posterX + 8, posterY + 12);
-    posterFrame.lineTo(posterX + posterWidth - 8, posterY + 12);
-    posterFrame.moveTo(posterX + 8, posterY + posterHeight - 10);
-    posterFrame.lineTo(posterX + posterWidth - 12, posterY + posterHeight - 10);
 
     wallShelf.clear();
     shelfItems.clear();
-    const shelfWidth = Math.round(width * 0.2);
-    const shelfHeight = 6;
-    const shelfX = Math.round(width * 0.62);
-    const shelfY = Math.round(wallHeight * 0.3);
+    const shelfWidth = Math.round(width * 0.16);
+    const shelfHeight = 5;
+    const shelfX = Math.round(width * 0.64);
+    const shelfY = Math.round(wallHeight * 0.28);
     wallShelf.beginFill(roomPalette.shelf, 1);
     wallShelf.drawRect(shelfX, shelfY, shelfWidth, shelfHeight);
     wallShelf.endFill();
-    wallShelf.lineStyle(1, roomPalette.shelfEdge, 1);
-    wallShelf.moveTo(shelfX, shelfY + shelfHeight);
-    wallShelf.lineTo(shelfX + shelfWidth, shelfY + shelfHeight);
-    const bookWidth = Math.round(shelfWidth * 0.22);
-    const bookHeight = 14;
-    const bookX = shelfX + 8;
-    const bookY = shelfY - bookHeight;
-    shelfItems.beginFill(roomPalette.accentWarm, 1);
-    shelfItems.drawRect(bookX, bookY, bookWidth, bookHeight);
-    shelfItems.endFill();
-    shelfItems.beginFill(roomPalette.accentCool, 1);
-    shelfItems.drawRect(bookX + bookWidth + 6, bookY + 4, 12, 10);
-    shelfItems.endFill();
     shelfItems.beginFill(roomPalette.accentNeutral, 1);
-    shelfItems.drawRect(shelfX + shelfWidth - 20, shelfY - 8, 14, 8);
-    shelfItems.endFill();
-    shelfItems.beginFill(roomPalette.plantLeafDark, 1);
-    shelfItems.drawRect(shelfX + shelfWidth - 18, shelfY - 14, 10, 6);
+    shelfItems.drawRect(shelfX + 8, shelfY - 8, 16, 8);
     shelfItems.endFill();
 
     floor.clear();
@@ -2159,45 +2121,20 @@ const initGame = ({ textures, gameRoot }) => {
     }
 
     floorMat.clear();
-    const matSize = Math.round(Math.min(width, height) * 0.32);
-    const matX = Math.round(width / 2 - matSize / 2);
-    const matY = Math.round(floorBottomY - matSize * 0.7);
+    const matRadius = Math.round(Math.min(width, height) * 0.16);
+    const matX = Math.round(width / 2);
+    const matY = Math.round(floorBottomY - matRadius * 0.6);
     floorMat.beginFill(roomPalette.mat);
-    floorMat.drawRect(matX, matY, matSize, matSize);
+    floorMat.drawEllipse(matX, matY, matRadius, matRadius);
     floorMat.endFill();
 
     rugDetail.clear();
-    rugDetail.lineStyle(1, roomPalette.matBorder, 1);
-    const inset = Math.max(6, Math.round(matSize * 0.12));
-    rugDetail.drawRect(matX + inset, matY + inset, matSize - inset * 2, matSize - inset * 2);
-    const stripeYTop = Math.round(matY + matSize * 0.34);
-    const stripeYBottom = Math.round(matY + matSize * 0.66);
-    rugDetail.moveTo(matX + inset, stripeYTop);
-    rugDetail.lineTo(matX + matSize - inset, stripeYTop);
-    rugDetail.moveTo(matX + inset, stripeYBottom);
-    rugDetail.lineTo(matX + matSize - inset, stripeYBottom);
-
-    floorPlant.clear();
-    floorPlantLeaves.clear();
-    const plantBaseX = Math.round(roomRight - width * 0.14);
-    const plantBaseY = Math.round(floorBottomY - 18);
-    const potWidth = 26;
-    const potHeight = 16;
-    floorPlant.beginFill(roomPalette.plantPot, 1);
-    floorPlant.drawRect(plantBaseX, plantBaseY - potHeight, potWidth, potHeight);
-    floorPlant.endFill();
-    floorPlant.lineStyle(1, roomPalette.ink, 0.25);
-    floorPlant.moveTo(plantBaseX, plantBaseY - 2);
-    floorPlant.lineTo(plantBaseX + potWidth, plantBaseY - 2);
-    floorPlantLeaves.beginFill(roomPalette.plantLeaf, 1);
-    floorPlantLeaves.drawRect(plantBaseX + 4, plantBaseY - 30, 6, 14);
-    floorPlantLeaves.drawRect(plantBaseX + 12, plantBaseY - 36, 6, 20);
-    floorPlantLeaves.drawRect(plantBaseX + 20, plantBaseY - 30, 6, 14);
-    floorPlantLeaves.endFill();
+    rugDetail.lineStyle(1, roomPalette.matBorder, 0.8);
+    rugDetail.drawEllipse(matX, matY, matRadius * 0.68, matRadius * 0.68);
 
     seam.clear();
     seam.visible = true;
-    seam.lineStyle(2, roomPalette.floorLine, 0.35);
+    seam.lineStyle(2, roomPalette.floorLine, 0.3);
     seam.moveTo(0, wallHeight);
     seam.lineTo(width, wallHeight);
   };
