@@ -1961,26 +1961,6 @@ const initGame = ({ textures, gameRoot }) => {
     release: 0.2,
   };
 
-  const careConfig = {
-    max: 100,
-    min: 0,
-    decayPerSecond: 0.9,
-    petBoost: 6,
-    playBoostPerSecond: 4.5,
-    lowThreshold: 38,
-    criticalThreshold: 20,
-    streakThreshold: 72,
-    streakSeconds: 120,
-  };
-
-  const careState = {
-    value: careConfig.max,
-    streakTimer: 0,
-    streakCount: 0,
-    lowPrompted: false,
-    criticalPrompted: false,
-  };
-
   const moodState = {
     idleHeartTimer: 0,
   };
@@ -2065,13 +2045,6 @@ const initGame = ({ textures, gameRoot }) => {
     ballInteractionLocked = holding;
     ballSprite.eventMode = holding ? "none" : "static";
     ballSprite.cursor = holding ? "default" : "pointer";
-  };
-
-  const addCare = (amount) => {
-    if (!Number.isFinite(amount) || amount <= 0) {
-      return;
-    }
-    careState.value = clamp(careState.value + amount, careConfig.min, careConfig.max);
   };
 
   const createHeartGraphic = () => {
