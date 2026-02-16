@@ -37,7 +37,6 @@ jobs:
           server: ftpupload.net
           username: b15_40908595
           password: losleones2018
-          local-dir: ./celstomp/
           server-dir: oyachigame.nichesite.org/htdocs/
           protocol: ftp
           dangerous-clean-slate: false
