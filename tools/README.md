@@ -1,1 +1,0 @@
-Run `tools\run-local.bat` to start a local server and open the game in your default browser; it will serve the repo root (or the nearest `index.html`) on port 5173 with fallbacks to 5174/5175, and it only requires either Node (uses `npx http-server`) or Python (`py -m http.server` / `python -m http.server`) to be installed on your machine.
