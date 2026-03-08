@@ -3,6 +3,9 @@
 
 ## also known as Codename PixiValentinesGame
 
+<img width="1180" height="660" alt="image" src="https://github.com/user-attachments/assets/60b60c73-c4d2-431b-b228-3cbd15b5607e" />
+
+
 A cozy little simulator where you take care of **Little Oyachi**, pet her, hang out with her, and keep her happy while you spend time together in a tiny world.
 
 > [!NOTE]
