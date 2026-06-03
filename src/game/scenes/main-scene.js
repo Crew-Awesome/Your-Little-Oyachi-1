@@ -1,4 +1,11 @@
 import { GAME_H, GAME_W, GAME_WIDTH } from "../config/constants.js";
+import {
+  getLanguageOptions,
+  getLanguagePreference,
+  onLanguageChange,
+  setLanguagePreference,
+  t,
+} from "../config/i18n.js";
 import { audioStorageKeys, hintStorageKeys, ritualStorageKeys } from "../config/storage.js";
 import {
   happyJumpTiming,
@@ -304,6 +311,7 @@ const initGame = ({ textures, gameRoot }) => {
     phase: "hidden",
     timer: 0,
     slide: 0,
+    title: "",
   };
   const nowPlayingTiming = {
     fadeIn: 0.4,
@@ -386,10 +394,12 @@ const initGame = ({ textures, gameRoot }) => {
   const showNowPlaying = (title) => {
     const trimmed = String(title ?? "").trim();
     if (!trimmed) {
+      nowPlayingState.title = "";
       hideNowPlaying();
       return;
     }
-    nowPlayingText.text = `Now playing: ${trimmed}`;
+    nowPlayingState.title = trimmed;
+    nowPlayingText.text = `${t("nowPlaying")}: ${trimmed}`;
     nowPlayingText.alpha = 0;
     updateNowPlayingLayout(getLayoutBounds());
     nowPlayingState.phase = "fadein";
@@ -429,14 +439,14 @@ const initGame = ({ textures, gameRoot }) => {
   };
 
   const hintConfig = {
-    pet: { text: "Tap Oyachi to pet", cooldownMs: 20000, chance: 0.75 },
-    hold: { text: "Keep holding to pet", cooldownMs: 24000, chance: 0.6 },
-    spam: { text: "Quick pets make a tiny sparkle", cooldownMs: 26000, chance: 0.55 },
-    toys: { text: "Tap toys to give Oyachi something to play with", cooldownMs: 26000, chance: 0.65 },
-    costumes: { text: "Tap costumes to dress Oyachi", cooldownMs: 30000, chance: 0.6 },
-    fullscreen: { text: "Tap fullscreen for a bigger view", cooldownMs: 32000, chance: 0.55 },
-    settings: { text: "Settings are in the corner", cooldownMs: 32000, chance: 0.55 },
-    test: { text: "Hint test: Oyachi is listening.", cooldownMs: 0, chance: 1 },
+    pet: { key: "hint.pet", cooldownMs: 20000, chance: 0.75 },
+    hold: { key: "hint.hold", cooldownMs: 24000, chance: 0.6 },
+    spam: { key: "hint.spam", cooldownMs: 26000, chance: 0.55 },
+    toys: { key: "hint.toys", cooldownMs: 26000, chance: 0.65 },
+    costumes: { key: "hint.costumes", cooldownMs: 30000, chance: 0.6 },
+    fullscreen: { key: "hint.fullscreen", cooldownMs: 32000, chance: 0.55 },
+    settings: { key: "hint.settings", cooldownMs: 32000, chance: 0.55 },
+    test: { key: "hint.test", cooldownMs: 0, chance: 1 },
   };
 
   const hintState = {
@@ -505,7 +515,7 @@ const initGame = ({ textures, gameRoot }) => {
         return false;
       }
     }
-    hintText.text = config.text;
+    hintText.text = t(config.key);
     hintOverlay.alpha = 0;
     hintOverlay.visible = true;
     updateHintLayout(getLayoutBounds());
@@ -753,6 +763,7 @@ const initGame = ({ textures, gameRoot }) => {
     buttonWidth: 26,
     buttonHeight: 16,
     buttonGap: 4,
+    choiceButtonWidth: 40,
     toggleWidth: 30,
     toggleHeight: 16,
   };
@@ -786,9 +797,9 @@ const initGame = ({ textures, gameRoot }) => {
   };
 
   const settingsTabs = [
-    { id: "audio", label: "Audio" },
-    { id: "hints", label: "Hints" },
-    { id: "other", label: "Other" },
+    { id: "audio", labelKey: "settings.audio" },
+    { id: "hints", labelKey: "settings.hints" },
+    { id: "other", labelKey: "settings.other" },
   ];
 
   const menuBackground = new PIXI.Graphics();
@@ -815,7 +826,7 @@ const initGame = ({ textures, gameRoot }) => {
     container.eventMode = "static";
     container.cursor = "pointer";
     const bg = new PIXI.Graphics();
-    const text = createPixelText(tab.label, {
+    const text = createPixelText(t(tab.labelKey), {
       fontSize: 12,
       fill: settingsColors.text,
       align: "center",
@@ -875,7 +886,11 @@ const initGame = ({ textures, gameRoot }) => {
       state.pressed = false;
       update();
     });
-    return { container, applyLayout, update };
+    const setLabel = () => {
+      text.text = t(tab.labelKey);
+      update();
+    };
+    return { container, applyLayout, update, setLabel };
   };
 
   const tabButtons = settingsTabs.map((tab) => createTabButton(tab));
@@ -944,6 +959,10 @@ const initGame = ({ textures, gameRoot }) => {
       state.active = active;
       update();
     };
+    const setLabel = (nextLabel) => {
+      text.text = nextLabel;
+      update();
+    };
     container.on("pointerenter", () => {
       state.hovered = true;
       update();
@@ -965,13 +984,13 @@ const initGame = ({ textures, gameRoot }) => {
       state.pressed = false;
       update();
     });
-    return { container, setLayout, setActive, update };
+    return { container, setLayout, setActive, setLabel, update };
   };
 
-  const createSliderRow = ({ label, value, enabled, onChange, onToggle }) => {
+  const createSliderRow = ({ labelKey, value, enabled, onChange, onToggle }) => {
     const container = new PIXI.Container();
     container.eventMode = "static";
-    const labelText = createPixelText(label, {
+    const labelText = createPixelText(t(labelKey), {
       fontSize: 12,
       fill: settingsColors.text,
       align: "left",
@@ -980,8 +999,8 @@ const initGame = ({ textures, gameRoot }) => {
     const trackBg = new PIXI.Graphics();
     const trackFill = new PIXI.Graphics();
     const knob = new PIXI.Graphics();
-    const onButton = createTextButton("On");
-    const offButton = createTextButton("Off");
+    const onButton = createTextButton(t("settings.on"));
+    const offButton = createTextButton(t("settings.off"));
     container.addChild(labelText, trackBg, trackFill, knob, onButton.container, offButton.container);
     const sliderData = {
       container,
@@ -1009,6 +1028,7 @@ const initGame = ({ textures, gameRoot }) => {
       setActive: null,
       setEnabled: null,
       refresh: null,
+      refreshLabels: null,
     };
 
     const drawTrack = () => {
@@ -1075,6 +1095,12 @@ const initGame = ({ textures, gameRoot }) => {
     sliderData.setEnabled = setEnabled;
 
     sliderData.refresh = drawTrack;
+    sliderData.refreshLabels = () => {
+      labelText.text = t(labelKey);
+      onButton.setLabel(t("settings.on"));
+      offButton.setLabel(t("settings.off"));
+      drawTrack();
+    };
 
     const applyLayout = (layout, position) => {
       sliderData.lastLayout = layout;
@@ -1162,10 +1188,10 @@ const initGame = ({ textures, gameRoot }) => {
     return sliderData;
   };
 
-  const createToggleRow = ({ label, enabled, onToggle }) => {
+  const createToggleRow = ({ labelKey, enabled, onToggle }) => {
     const container = new PIXI.Container();
     container.eventMode = "static";
-    const labelText = createPixelText(label, {
+    const labelText = createPixelText(t(labelKey), {
       fontSize: 12,
       fill: settingsColors.text,
       align: "left",
@@ -1191,6 +1217,7 @@ const initGame = ({ textures, gameRoot }) => {
       lastPosition: null,
       applyLayout: null,
       setEnabled: null,
+      refreshLabels: null,
     };
 
     const drawToggle = () => {
@@ -1223,6 +1250,10 @@ const initGame = ({ textures, gameRoot }) => {
     };
 
     rowData.setEnabled = setEnabled;
+    rowData.refreshLabels = () => {
+      labelText.text = t(labelKey);
+      drawToggle();
+    };
 
     const applyLayout = (layout, position) => {
       rowData.lastLayout = layout;
@@ -1261,6 +1292,99 @@ const initGame = ({ textures, gameRoot }) => {
     return rowData;
   };
 
+  const createChoiceRow = ({ labelKey, getOptions, getSelected, onSelect }) => {
+    const container = new PIXI.Container();
+    container.eventMode = "static";
+    const labelText = createPixelText(t(labelKey), {
+      fontSize: 12,
+      fill: settingsColors.text,
+      align: "left",
+    });
+    labelText.anchor.set(0, 0.5);
+    const buttonsContainer = new PIXI.Container();
+    container.addChild(labelText, buttonsContainer);
+
+    const rowData = {
+      container,
+      labelText,
+      buttonsContainer,
+      buttons: [],
+      lastLayout: null,
+      lastPosition: null,
+      applyLayout: null,
+      refresh: null,
+      refreshLabels: null,
+    };
+
+    const buildButtons = () => {
+      buttonsContainer.removeChildren();
+      rowData.buttons = getOptions().map((option) => {
+        const button = createTextButton(option.label);
+        button.container.on("pointerdown", (event) => {
+          if (typeof onSelect === "function") {
+            onSelect(option.id);
+          }
+          rowData.refresh();
+          event.stopPropagation();
+        });
+        buttonsContainer.addChild(button.container);
+        return { option, button };
+      });
+    };
+
+    const refresh = () => {
+      const selected = getSelected();
+      rowData.buttons.forEach(({ option, button }) => {
+        button.setActive(option.id === selected);
+      });
+    };
+
+    rowData.refresh = refresh;
+
+    const applyLayout = (layout, position) => {
+      rowData.lastLayout = layout;
+      rowData.lastPosition = position;
+      container.x = position.x;
+      container.y = position.y;
+      labelText.style.fontSize = layout.labelFontSize;
+      labelText.x = 0;
+      labelText.y = Math.round(layout.rowHeight / 2);
+      const buttonY = Math.round((layout.rowHeight - layout.buttonHeight) / 2);
+      const totalButtonWidth =
+        rowData.buttons.length * layout.choiceButtonWidth +
+        Math.max(0, rowData.buttons.length - 1) * layout.buttonGap;
+      buttonsContainer.x = Math.max(
+        layout.labelWidth + layout.sliderGap,
+        layout.rowWidth - totalButtonWidth,
+      );
+      buttonsContainer.y = buttonY;
+      rowData.buttons.forEach(({ button }, index) => {
+        button.setLayout(layout.choiceButtonWidth, layout.buttonHeight);
+        button.container.x = Math.round(index * (layout.choiceButtonWidth + layout.buttonGap));
+        button.container.y = 0;
+      });
+      container.hitArea = new PIXI.Rectangle(0, 0, layout.rowWidth, layout.rowHeight);
+      refresh();
+    };
+
+    rowData.applyLayout = applyLayout;
+    rowData.refreshLabels = () => {
+      labelText.text = t(labelKey);
+      rowData.buttons.forEach(({ option, button }) => {
+        button.setLabel(getOptions().find((entry) => entry.id === option.id)?.label ?? option.label);
+      });
+      if (rowData.lastLayout && rowData.lastPosition) {
+        applyLayout(rowData.lastLayout, rowData.lastPosition);
+      } else {
+        refresh();
+      }
+    };
+
+    buildButtons();
+    refresh();
+    return rowData;
+  };
+
   const saveMusicVolume = (value) => {
     audioSystem.setMusicVolume(value);
     localStorage.setItem(audioStorageKeys.musicVolume, value.toFixed(3));
@@ -1295,7 +1419,7 @@ const initGame = ({ textures, gameRoot }) => {
   };
 
   const musicSlider = createSliderRow({
-    label: "Music",
+    labelKey: "settings.music",
     value: audioSystem.getMusicEnabled() ? audioSystem.getMusicVolume() : 0,
     enabled: audioSystem.getMusicEnabled(),
     onChange: saveMusicVolume,
@@ -1305,7 +1429,7 @@ const initGame = ({ textures, gameRoot }) => {
     syncSliderToAudio(musicSlider, audioSystem.getMusicVolume, audioSystem.getMusicEnabled);
   };
   const sfxSlider = createSliderRow({
-    label: "SFX",
+    labelKey: "settings.sfx",
     value: audioSystem.getSfxEnabled() ? audioSystem.getSfxVolume() : 0,
     enabled: audioSystem.getSfxEnabled(),
     onChange: saveSfxVolume,
@@ -1315,12 +1439,19 @@ const initGame = ({ textures, gameRoot }) => {
     syncSliderToAudio(sfxSlider, audioSystem.getSfxVolume, audioSystem.getSfxEnabled);
   };
   hintToggleRow = createToggleRow({
-    label: "Show Hints",
+    labelKey: "settings.showHints",
     enabled: hintsEnabled,
     onToggle: saveHintsEnabled,
   });
+  const languageRow = createChoiceRow({
+    labelKey: "settings.language",
+    getOptions: getLanguageOptions,
+    getSelected: getLanguagePreference,
+    onSelect: setLanguagePreference,
+  });
   audioTab.addChild(musicSlider.container, sfxSlider.container);
   hintsTab.addChild(hintToggleRow.container);
+  otherTab.addChild(languageRow.container);
 
   const sliders = [musicSlider, sfxSlider];
 
@@ -1354,7 +1485,7 @@ const initGame = ({ textures, gameRoot }) => {
   uiLayer.addChild(toysPanel);
 
   const toysPanelBackground = new PIXI.Graphics();
-  const toysPanelTitle = createPixelText("Toys", {
+  const toysPanelTitle = createPixelText(t("toys.title"), {
     fontSize: 12,
     fill: settingsColors.text,
     align: "left",
@@ -1364,7 +1495,7 @@ const initGame = ({ textures, gameRoot }) => {
   toysPanel.addChild(toysPanelBackground, toysPanelTitle, toysGrid);
 
   const toysList = [
-    { id: "ball", label: "Ball", texture: textures.ball },
+    { id: "ball", labelKey: "toys.ball", texture: textures.ball },
   ];
   const toyTiles = new Map();
   const activeToys = new Set();
@@ -1398,7 +1529,7 @@ const initGame = ({ textures, gameRoot }) => {
     const icon = new PIXI.Sprite(toy.texture);
     icon.anchor.set(0.5);
     icon.roundPixels = true;
-    const label = createPixelText(toy.label, {
+    const label = createPixelText(t(toy.labelKey), {
       fontSize: 10,
       fill: settingsColors.text,
       align: "center",
@@ -1540,6 +1671,7 @@ const initGame = ({ textures, gameRoot }) => {
     const buttonWidth = Math.round(settingsLayout.buttonWidth * uiScaleState.menuBoost);
     const buttonHeight = Math.round(settingsLayout.buttonHeight * uiScaleState.menuBoost);
     const buttonGap = Math.round(settingsLayout.buttonGap * uiScaleState.menuBoost);
+    const choiceButtonWidth = Math.round(settingsLayout.choiceButtonWidth * uiScaleState.menuBoost);
     const toggleWidth = Math.round(settingsLayout.toggleWidth * uiScaleState.menuBoost);
     const toggleHeight = Math.round(settingsLayout.toggleHeight * uiScaleState.menuBoost);
     const contentWidth = Math.max(1, panelWidth - padding * 2);
@@ -1585,6 +1717,7 @@ const initGame = ({ textures, gameRoot }) => {
       buttonWidth,
       buttonHeight,
       buttonGap,
+      choiceButtonWidth,
       labelFontSize: Math.round(12 * uiScaleState.menuBoost),
     };
 
@@ -1604,6 +1737,20 @@ const initGame = ({ textures, gameRoot }) => {
         labelFontSize: Math.round(12 * uiScaleState.menuBoost),
       };
       hintToggleRow.applyLayout(toggleLayout, { x: 0, y: 0 });
+    }
+
+    if (languageRow) {
+      const choiceLayout = {
+        rowWidth: contentWidth,
+        rowHeight,
+        labelWidth,
+        sliderGap,
+        buttonHeight,
+        buttonGap,
+        choiceButtonWidth,
+        labelFontSize: Math.round(12 * uiScaleState.menuBoost),
+      };
+      languageRow.applyLayout(choiceLayout, { x: 0, y: 0 });
     }
 
     const toyPanelScale = uiScaleState.menuBoost;
@@ -1829,12 +1976,41 @@ const initGame = ({ textures, gameRoot }) => {
   closetSlotCheck.alpha = 0.75;
   closetGrid.addChild(closetSlotCheck);
 
-  const closetSlotLabel = createPixelText("Default", {
+  const closetSlotLabel = createPixelText(t("closet.default"), {
     fontSize: 12,
     fill: 0x111111,
   });
   closetSlotLabel.anchor.set(0.5, 0.5);
   closetGrid.addChild(closetSlotLabel);
+
+  const refreshLocalizedUi = () => {
+    tabButtons.forEach((button) => button.setLabel());
+    musicSlider.refreshLabels();
+    sfxSlider.refreshLabels();
+    hintToggleRow.refreshLabels();
+    languageRow.refreshLabels();
+    toysPanelTitle.text = t("toys.title");
+    toysList.forEach((toy) => {
+      const tile = toyTiles.get(toy.id);
+      if (tile) {
+        tile.label.text = t(toy.labelKey);
+      }
+    });
+    closetSlotLabel.text = t("closet.default");
+    if (hintState.activeId && hintConfig[hintState.activeId]) {
+      hintText.text = t(hintConfig[hintState.activeId].key);
+      updateHintLayout(getLayoutBounds());
+    }
+    if (nowPlayingState.title) {
+      nowPlayingText.text = `${t("nowPlaying")}: ${nowPlayingState.title}`;
+      updateNowPlayingLayout(getLayoutBounds());
+    }
+  };
+
+  const unsubscribeLanguageChange = onLanguageChange(refreshLocalizedUi);
+  if (Array.isArray(app.__oyachiCleanup)) {
+    app.__oyachiCleanup.push(unsubscribeLanguageChange);
+  }
 
   const closetSpotlightState = {
     timer: 0,
@@ -3271,7 +3447,7 @@ const initGame = ({ textures, gameRoot }) => {
       zoomiesState.cooldown -= deltaSeconds;
       if (zoomiesState.cooldown <= 0 && Math.random() < 0.06) {
         startZoomies();
-        showToast("Zoomies!");
+        showToast(t("toast.zoomies"));
       }
     }
     if (state.current === "idle") {
@@ -3465,7 +3641,7 @@ const initGame = ({ textures, gameRoot }) => {
             toyCatchState.count += 1;
             toyCatchState.lastCatchAt = now;
             if (toyCatchMilestones.has(toyCatchState.count)) {
-              showToast(`Catch x${toyCatchState.count}!`);
+              showToast(t("toast.catch", { count: toyCatchState.count }));
               for (let i = 0; i < 2; i += 1) {
                 spawnHeart("excited", { force: true, ignoreCooldown: true });
               }
@@ -3954,7 +4130,7 @@ const initGame = ({ textures, gameRoot }) => {
       const lastGreetingDay = localStorage.getItem(ritualStorageKeys.lastGreetingDay);
       if (todayKey && todayKey !== lastGreetingDay) {
         localStorage.setItem(ritualStorageKeys.lastGreetingDay, todayKey);
-        showToast("Hi again, I missed you");
+        showToast(t("toast.greeting"));
         for (let i = 0; i < 3; i += 1) {
           spawnHeart("gentle", { force: true, ignoreCooldown: true });
         }

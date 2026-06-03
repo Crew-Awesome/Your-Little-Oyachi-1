@@ -1,4 +1,5 @@
 import { audioDefaults, audioPitchConfig } from "../config/audio.js";
+import { t } from "../config/i18n.js";
 import { audioStorageKeys } from "../config/storage.js";
 import { clamp } from "../utils/math.js";
 
@@ -317,7 +318,7 @@ const createAudioSystem = () => {
       }
     };
     if (!unlocked) {
-      reportProgress(1, "Audio locked");
+      reportProgress(1, t("audio.locked"));
       return;
     }
     if (sfxLoadingPromise) {
@@ -329,16 +330,16 @@ const createAudioSystem = () => {
     );
     const total = Math.max(entries.length, 1);
     let loaded = 0;
-    reportProgress(0, "Loading sfx");
+    reportProgress(0, t("audio.sfx"));
     sfxLoadingPromise = Promise.all(
       entries.map(async ({ key, src }) => {
-        reportProgress(loaded / total, `Loading sfx: ${src}`, src);
+        reportProgress(loaded / total, t("audio.sfxSource", { src }), src);
         const buffer = await loadBuffer(key, src);
         if (!buffer) {
           return;
         }
         loaded += 1;
-        reportProgress(loaded / total, `Loading sfx: ${src}`, src);
+        reportProgress(loaded / total, t("audio.sfxSource", { src }), src);
       }),
     ).then(() => {
       sfxReady = true;
@@ -356,7 +357,7 @@ const createAudioSystem = () => {
       }
     };
     if (!unlocked) {
-      reportProgress(1, "Audio locked");
+      reportProgress(1, t("audio.locked"));
       return;
     }
     if (musicLoadingPromise) {
@@ -365,16 +366,16 @@ const createAudioSystem = () => {
     }
     const total = Math.max(musicTracks.length, 1);
     let loaded = 0;
-    reportProgress(0, "Loading music");
+    reportProgress(0, t("audio.music"));
     musicLoadingPromise = Promise.all(
       musicTracks.map(async (track) => {
-        reportProgress(loaded / total, `Loading music: ${track.src}`, track.src);
+        reportProgress(loaded / total, t("audio.musicSource", { src: track.src }), track.src);
         const buffer = await loadBuffer(`music:${track.src}`, track.src);
         if (!buffer) {
           return;
         }
         loaded += 1;
-        reportProgress(loaded / total, `Loading music: ${track.src}`, track.src);
+        reportProgress(loaded / total, t("audio.musicSource", { src: track.src }), track.src);
       }),
     ).then(() => {
       musicReady = true;
@@ -419,34 +420,34 @@ const createAudioSystem = () => {
       }
     };
     if (!unlocked) {
-      reportProgress(1, "Audio locked");
+      reportProgress(1, t("audio.locked"));
       return;
     }
     if (initialMusicReady) {
-      reportProgress(1, "Music ready");
+      reportProgress(1, t("audio.musicReady"));
       return;
     }
     if (initialMusicPromise) {
       await initialMusicPromise;
-      reportProgress(1, "Music ready");
+      reportProgress(1, t("audio.musicReady"));
       return;
     }
     const index = selectInitialTrack();
     if (index < 0) {
       initialMusicReady = true;
-      reportProgress(1, "No music tracks");
+      reportProgress(1, t("audio.noMusic"));
       return;
     }
     const track = musicTracks[index];
-    reportProgress(0, `Loading music: ${track.src}`, track.src);
+    reportProgress(0, t("audio.musicSource", { src: track.src }), track.src);
     initialMusicPromise = loadBuffer(`music:${track.src}`, track.src)
       .then((buffer) => {
         initialMusicReady = Boolean(buffer);
-        reportProgress(1, `Loaded: ${track.src}`, track.src);
+        reportProgress(1, t("audio.loadedSource", { src: track.src }), track.src);
       })
       .catch((error) => {
         console.error("Initial music preload failed.", error);
-        reportProgress(1, `Failed: ${track.src}`, track.src);
+        reportProgress(1, t("audio.failedSource", { src: track.src }), track.src);
       });
     await initialMusicPromise;
   };

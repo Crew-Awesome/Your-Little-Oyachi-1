@@ -1,4 +1,5 @@
 import { coverArtAsset, fontAssets, gameAssets, uiAssets } from "./config/assets.js";
+import { t } from "./config/i18n.js";
 import { createApp, setRendererFallback } from "./core/app.js";
 import { registerAppListener } from "./core/events.js";
 import { applyLayoutMode, setLayoutApp, setLayoutRoot } from "./core/layout.js";
@@ -88,7 +89,7 @@ const bootstrap = async () => {
         label: update?.label,
       };
     };
-    loadingScreen.setDetailText("Loading artwork");
+    loadingScreen.setDetailText(t("loading.artwork"));
     const texturesPromise = PIXI.Assets.load(
       [...gameAssets, coverArtAsset, ...uiAssets, ...fontAssets],
       (progress) => {
@@ -129,7 +130,7 @@ const bootstrap = async () => {
       musicProgress = 1;
       updateAudioProgress();
     }
-    loadingScreen.setDetailText("Finalizing");
+    loadingScreen.setDetailText(t("loading.finalizing"));
     loadingScreen.setSecondaryIndex(3);
     const context = createMainScene({ textures, gameRoot });
     setupStartOverlay({

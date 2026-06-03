@@ -13,3 +13,7 @@ export const hintStorageKeys = {
 export const ritualStorageKeys = {
   lastGreetingDay: "oyachi_last_greeting_day",
 };
+
+export const languageStorageKeys = {
+  preference: "oyachi_language_preference",
+};

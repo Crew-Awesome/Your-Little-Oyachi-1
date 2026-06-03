@@ -1,4 +1,5 @@
 import { GAME_H, GAME_W } from "../config/constants.js";
+import { t } from "../config/i18n.js";
 import { getLayoutBounds, registerLayoutSubscriber } from "../core/layout.js";
 import { getApp } from "../core/app.js";
 import { clamp } from "../utils/math.js";
@@ -19,7 +20,7 @@ export const createLoadingScreen = () => {
   shade.endFill();
   container.addChild(shade);
 
-  const loadingText = createPixelText("Loading.", {
+  const loadingText = createPixelText(`${t("loading.main")}.`, {
     fontSize: 14,
     fill: 0x111111,
   });
@@ -27,13 +28,13 @@ export const createLoadingScreen = () => {
   container.addChild(loadingText);
 
   const secondaryMessages = [
-    "Preparing the room",
-    "Loading sounds",
-    "Getting cozy",
-    "Almost ready",
+    "loading.room",
+    "loading.sounds",
+    "loading.cozy",
+    "loading.ready",
   ];
   let secondaryIndex = 0;
-  const secondaryText = createPixelText(secondaryMessages[secondaryIndex], {
+  const secondaryText = createPixelText(t(secondaryMessages[secondaryIndex]), {
     fontSize: 11,
     fill: 0x4a4a4a,
   });
@@ -63,7 +64,7 @@ export const createLoadingScreen = () => {
   const barFill = new PIXI.Graphics();
   container.addChild(barFill);
 
-  const skipText = createPixelText("Skip", {
+  const skipText = createPixelText(t("loading.skip"), {
     fontSize: 11,
     fill: 0x111111,
   });
@@ -167,14 +168,14 @@ export const createLoadingScreen = () => {
     if (dotsTimer >= 0.45) {
       dotsTimer = 0;
       dotsCount = (dotsCount % 3) + 1;
-      loadingText.text = `Loading${".".repeat(dotsCount)}`;
+      loadingText.text = `${t("loading.main")}${".".repeat(dotsCount)}`;
     }
 
     secondaryTimer += deltaSeconds;
     if (secondaryTimer >= 3.2) {
       secondaryTimer = 0;
       secondaryIndex = (secondaryIndex + 1) % secondaryMessages.length;
-      secondaryText.text = secondaryMessages[secondaryIndex];
+      secondaryText.text = t(secondaryMessages[secondaryIndex]);
     }
 
     if (!skipVisible) {
@@ -215,7 +216,7 @@ export const createLoadingScreen = () => {
     },
     setSecondaryIndex: (index) => {
       secondaryIndex = clamp(index, 0, secondaryMessages.length - 1);
-      secondaryText.text = secondaryMessages[secondaryIndex];
+      secondaryText.text = t(secondaryMessages[secondaryIndex]);
       secondaryTimer = 0;
     },
     setDetailText: (text) => {
