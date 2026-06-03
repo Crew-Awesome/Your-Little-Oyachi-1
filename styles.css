@@ -149,9 +149,9 @@ body.game-only #game canvas {
 /* DePixel font (DePixel family) */
 @font-face {
   font-family: 'DePixel';
-  src: url('/assets/fonts/DePixel/1144faa6fb5f8b45e79d4d87a8c27e92.woff2') format('woff2'),
-       url('/assets/fonts/DePixel/1144faa6fb5f8b45e79d4d87a8c27e92.woff') format('woff'),
-       url('/assets/fonts/DePixel/1144faa6fb5f8b45e79d4d87a8c27e92.ttf') format('truetype');
+  src: url('assets/fonts/DePixel/1144faa6fb5f8b45e79d4d87a8c27e92.woff2') format('woff2'),
+       url('assets/fonts/DePixel/1144faa6fb5f8b45e79d4d87a8c27e92.woff') format('woff'),
+       url('assets/fonts/DePixel/1144faa6fb5f8b45e79d4d87a8c27e92.ttf') format('truetype');
   font-weight: normal;
   font-style: normal;
   font-display: swap;
@@ -159,7 +159,7 @@ body.game-only #game canvas {
 /* Fallback for very old browsers (optional legacy formats) */
 @font-face {
   font-family: 'DePixel';
-  src: url('/assets/fonts/DePixel/1144faa6fb5f8b45e79d4d87a8c27e92.eot');
+  src: url('assets/fonts/DePixel/1144faa6fb5f8b45e79d4d87a8c27e92.eot');
   font-weight: normal;
   font-style: normal;
   font-display: swap;
