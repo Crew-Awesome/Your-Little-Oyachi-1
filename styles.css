@@ -2,6 +2,7 @@
   color-scheme: light;
   font-family: "Comic Sans MS", "Baloo 2", "Trebuchet MS", sans-serif;
   --viewport-height: 100vh;
+  background: #f0d6df;
 }
 
 * {
@@ -117,9 +118,11 @@ body {
 }
 
 body.game-only {
-  width: 100%;
+  width: 100vw;
   height: var(--viewport-height);
   display: block;
+  overflow: hidden;
+  background: #f0d6df;
 }
 
 body.game-only #game {
@@ -169,6 +172,8 @@ body.game-only #game canvas {
 /* Global defaults: keep site in Comic Sans */
 html, body {
   font-family: "Comic Sans MS", "Comic Sans", "Baloo 2", "Trebuchet MS", sans-serif;
+  width: 100%;
+  min-height: 100%;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }

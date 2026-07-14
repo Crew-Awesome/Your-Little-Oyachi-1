@@ -78,9 +78,7 @@ const initGame = ({ textures, gameRoot }) => {
     posterInner: 0xf7eef1,
     shelf: 0xdec7d1,
     shelfEdge: 0xc7b1bc,
-    floorCool: 0xe3d5df,
-    floorMid: 0xeacfd9,
-    floorWarm: 0xf0d6df,
+    floor: 0xf0d6df,
     floorLine: 0xddc5d1,
     mat: 0xf3dbe4,
     matBorder: 0xddbfcd,
@@ -346,9 +344,10 @@ const initGame = ({ textures, gameRoot }) => {
     scale: 1,
   };
   const updateNowPlayingLayout = (layout) => {
-    nowPlayingLayout.x = layout.left + 16;
-    nowPlayingLayout.y = layout.bottom - 14;
-    nowPlayingLayout.maxWidth = Math.max(160, Math.min(360, layout.width - 24));
+    const safeInset = Math.round(32 * uiScaleState.scale);
+    nowPlayingLayout.x = layout.left + safeInset;
+    nowPlayingLayout.y = layout.bottom - safeInset;
+    nowPlayingLayout.maxWidth = Math.max(160, Math.min(360, layout.width - safeInset * 2));
     nowPlayingLayout.slideDistance = 12 * uiScaleState.scale;
     nowPlayingText.style.fontSize = Math.round(12 * uiScaleState.scale);
     nowPlayingText.scale.set(1);
@@ -2133,6 +2132,7 @@ const initGame = ({ textures, gameRoot }) => {
     active: false,
     timer: 0,
     cooldown: 10 + Math.random() * 12,
+    trailTimer: 0,
   };
 
   const ballConfig = {
@@ -2231,28 +2231,9 @@ const initGame = ({ textures, gameRoot }) => {
     };
   };
 
-  for (let i = 0; i < 12; i += 1) {
+  for (let i = 0; i < 32; i += 1) {
     heartPool.push(createHeartGraphic());
   }
-
-  let floorGradientTexture = null;
-  const toCssColor = (value) => `#${value.toString(16).padStart(6, "0")}`;
-  const createFloorGradientTexture = (floorHeight) => {
-    const canvas = document.createElement("canvas");
-    canvas.width = 4;
-    canvas.height = Math.max(2, Math.round(floorHeight));
-    const ctx = canvas.getContext("2d");
-    if (!ctx) {
-      return null;
-    }
-    const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
-    gradient.addColorStop(0, toCssColor(roomPalette.floorCool));
-    gradient.addColorStop(0.55, toCssColor(roomPalette.floorMid));
-    gradient.addColorStop(1, toCssColor(roomPalette.floorWarm));
-    ctx.fillStyle = gradient;
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-    return PIXI.Texture.from(canvas);
-  };
 
   const drawRoom = () => {
     const { width, height } = app.renderer;
@@ -2306,27 +2287,9 @@ const initGame = ({ textures, gameRoot }) => {
 
     floor.clear();
     const floorHeight = height - wallHeight;
-    if (floorGradientTexture) {
-      floorGradientTexture.destroy(true);
-      floorGradientTexture = null;
-    }
-    floorGradientTexture = createFloorGradientTexture(floorHeight);
-    if (floorGradientTexture) {
-      floorGradientTexture.baseTexture.scaleMode = PIXI.SCALE_MODES.LINEAR;
-      const floorMatrix = new PIXI.Matrix();
-      floorMatrix.scale(
-        width / Math.max(1, floorGradientTexture.width),
-        floorHeight / Math.max(1, floorGradientTexture.height),
-      );
-      floorMatrix.translate(0, wallHeight);
-      floor.beginTextureFill({ texture: floorGradientTexture, matrix: floorMatrix });
-      floor.drawRect(0, wallHeight, width, floorHeight);
-      floor.endFill();
-    } else {
-      floor.beginFill(roomPalette.floorWarm);
-      floor.drawRect(0, wallHeight, width, floorHeight);
-      floor.endFill();
-    }
+    floor.beginFill(roomPalette.floor, 1);
+    floor.drawRect(0, wallHeight, width, floorHeight);
+    floor.endFill();
     floor.lineStyle(1, roomPalette.floorLine, 0.08);
     const plankStartY = Math.round(wallHeight + 12);
     const plankGap = Math.max(26, Math.round(height * 0.06));
@@ -2495,10 +2458,11 @@ const initGame = ({ textures, gameRoot }) => {
     const safeRight = right - maxHalfWidth - 6;
     const safeTop = top + maxHalfHeight + 6;
     const safeBottom = bottom - maxHalfHeight - 6;
-    const gearMargin = 24 * marginScale;
+    const cornerPadding = 32 * marginScale;
+    const gearMargin = cornerPadding;
     settingsButton.container.x = Math.round(clamp(left + gearMargin, safeLeft, safeRight));
     settingsButton.container.y = Math.round(clamp(top + gearMargin, safeTop, safeBottom));
-    const fullscreenMargin = 24 * marginScale;
+    const fullscreenMargin = cornerPadding;
     fullscreenButton.container.x = Math.round(clamp(right - fullscreenMargin, safeLeft, safeRight));
     fullscreenButton.container.y = Math.round(clamp(top + fullscreenMargin, safeTop, safeBottom));
     const baseMenuWidth = uiScaleState.menuWidth;
@@ -2513,7 +2477,7 @@ const initGame = ({ textures, gameRoot }) => {
     optionsMenu.y = Math.round(
       clamp(settingsButton.container.y + 22 * uiScaleState.scale, top + 8, bottom - menuHeight - 8),
     );
-    const bottomMargin = 26 * marginScale;
+    const bottomMargin = 36 * marginScale;
     updateHintLayout(layout);
     const iconGap = uiScaleState.bottomIconSpacing;
     const iconTotalWidth =
@@ -2522,8 +2486,8 @@ const initGame = ({ textures, gameRoot }) => {
       iconGap;
     const rowLeft = clamp(
       centerX - iconTotalWidth / 2,
-      left + 12 * marginScale,
-      right - 12 * marginScale - iconTotalWidth,
+      left + cornerPadding,
+      right - cornerPadding - iconTotalWidth,
     );
     const buttonsY = clamp(bottom - bottomMargin, safeTop, safeBottom);
     toysButton.container.x = Math.round(rowLeft + toysButton.icon.width / 2);
@@ -2556,7 +2520,7 @@ const initGame = ({ textures, gameRoot }) => {
     closetBackground.endFill();
 
     closetFloor.clear();
-    closetFloor.beginFill(roomPalette.floorWarm);
+    closetFloor.beginFill(roomPalette.floor);
     closetFloor.drawRect(0, closetWallHeight, width, height - closetWallHeight);
     closetFloor.endFill();
     closetFloor.lineStyle(1, roomPalette.floorLine, 0.2);
@@ -3115,8 +3079,9 @@ const initGame = ({ textures, gameRoot }) => {
 
   const startZoomies = () => {
     zoomiesState.active = true;
-    zoomiesState.timer = 1.8 + Math.random() * 1.2;
+    zoomiesState.timer = 2.4 + Math.random() * 0.8;
     zoomiesState.cooldown = 18 + Math.random() * 18;
+    zoomiesState.trailTimer = 0;
     state.moveTimer = 120 + Math.random() * 80;
     state.moveDirection = Math.random() < 0.5 ? -1 : 1;
     state.moveTargetX = null;
@@ -3132,13 +3097,20 @@ const initGame = ({ textures, gameRoot }) => {
   scheduleIdle();
 
   const spawnHeart = (petType, options = {}) => {
-    const { force = false, ignoreCooldown = false, yOffset = 0 } = options;
+    const {
+      force = false,
+      ignoreCooldown = false,
+      yOffset = 0,
+      x: spawnX,
+      y: spawnY,
+      trail = false,
+    } = options;
     const now = performance.now();
     if (!ignoreCooldown && !force && activeHearts.length > 0 && now < nextHeartAllowedAt) {
       return;
     }
     const plan = heartPlans[petType] || heartPlans.normal;
-    const spawnCount = plan.count;
+    const spawnCount = trail ? 1 : plan.count;
     let spawned = 0;
     if (!ignoreCooldown) {
       nextHeartAllowedAt = now + 120 + Math.random() * 60;
@@ -3162,13 +3134,16 @@ const initGame = ({ textures, gameRoot }) => {
       heart.wobblePhase = Math.random() * Math.PI * 2;
       heart.wobbleAmplitude = (2 + Math.random() * 1.5) * plan.wobble;
       const depthScale = 0.86 + state.depth * 0.22;
-      const heartScale =
-        heartBaseScale * (0.75 + state.depth * 0.18) * plan.size;
+      const heartScale = heartBaseScale * (0.75 + state.depth * 0.18) * plan.size;
       const headOffset = idleSprite.height * depthScale * 0.78;
-      const baseY = getBaseY(state.depth) + yOffset;
+      const baseY = Number.isFinite(spawnY)
+        ? spawnY
+        : getBaseY(state.depth) + yOffset;
       const horizontalSpread = 38 * depthScale;
       const verticalSpread = 22 * depthScale;
-      heart.baseX = oyachi.x + (Math.random() * 2 - 1) * horizontalSpread;
+      heart.baseX = Number.isFinite(spawnX)
+        ? spawnX
+        : oyachi.x + (Math.random() * 2 - 1) * horizontalSpread;
       heart.sprite.x = heart.baseX;
       const heartY = baseY - headOffset + (Math.random() * 2 - 1) * verticalSpread;
       heart.sprite.y = Math.min(heartY, baseY - 1);
@@ -3399,8 +3374,13 @@ const initGame = ({ textures, gameRoot }) => {
     if (state.current === "move") {
       walkHopTimer -= deltaSeconds;
       if (walkHopTimer <= 0) {
-        walkHopTimer = 0.38 + Math.random() * 0.14;
-        void audioSystem.playSfx({ id: "walkHop", cooldownMs: 180 });
+        walkHopTimer = zoomiesState.active
+          ? 0.16 + Math.random() * 0.05
+          : 0.38 + Math.random() * 0.14;
+        void audioSystem.playSfx({
+          id: "walkHop",
+          cooldownMs: zoomiesState.active ? 100 : 180,
+        });
       }
     } else {
       walkHopTimer = 0;
@@ -3447,7 +3427,6 @@ const initGame = ({ textures, gameRoot }) => {
       zoomiesState.cooldown -= deltaSeconds;
       if (zoomiesState.cooldown <= 0 && Math.random() < 0.06) {
         startZoomies();
-        showToast(t("toast.zoomies"));
       }
     }
     if (state.current === "idle") {
@@ -3696,10 +3675,12 @@ const initGame = ({ textures, gameRoot }) => {
     let hopHeight = 0;
 
     if (state.current === "move") {
-      const hopPhase = ((performance.now() / 1000) * 2) % 1;
-      const zoomiesBoost = zoomiesState.active ? 1.9 : 1;
-      hopHeight = Math.sin(hopPhase * Math.PI) * 12 * zoomiesBoost;
-      const speed = 0.6 * delta * zoomiesBoost;
+      const walkCycleSpeed = zoomiesState.active ? 5.5 : 2;
+      const hopPhase = ((performance.now() / 1000) * walkCycleSpeed) % 1;
+      const zoomiesBoost = zoomiesState.active ? 7 : 1;
+      const hopBoost = zoomiesState.active ? 1.5 : 1;
+      hopHeight = Math.sin(hopPhase * Math.PI) * 12 * hopBoost;
+      const speed = 36 * deltaSeconds * zoomiesBoost;
       oyachi.x += state.moveDirection * speed;
       if (oyachi.x < roomLeft || oyachi.x > roomRight) {
         state.moveDirection *= -1;
@@ -3715,6 +3696,20 @@ const initGame = ({ textures, gameRoot }) => {
           state.depthTarget = state.depth;
           scheduleIdle();
         }
+      }
+    }
+
+    if (zoomiesState.active) {
+      zoomiesState.trailTimer -= deltaSeconds;
+      if (zoomiesState.trailTimer <= 0) {
+        spawnHeart("normal", {
+          force: true,
+          ignoreCooldown: true,
+          trail: true,
+          x: oyachi.x - state.moveDirection * 26,
+          y: getBaseY(state.depth),
+        });
+        zoomiesState.trailTimer = 0.08;
       }
     }
 
@@ -4081,15 +4076,6 @@ const initGame = ({ textures, gameRoot }) => {
     if (!menuBounds.contains(global.x, global.y) && !settingsBounds.contains(global.x, global.y)) {
       setMenuVisible(false);
       settingsButton.container.alpha = 0.18;
-    }
-  });
-
-  registerAppListener(app, window, "keydown", (event) => {
-    if (event.repeat) {
-      return;
-    }
-    if (event.key === "g" || event.key === "G") {
-      showHint("test", { force: true });
     }
   });
 

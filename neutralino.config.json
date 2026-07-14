@@ -1,0 +1,63 @@
+{
+  "$schema": "https://neutralino.js.org/configuration/neutralino.config.schema.json",
+  "applicationId": "com.oyachi.yourlittleoyachi",
+  "applicationName": "Your Little Oyachi",
+  "applicationIcon": "assets/site/favicon-big.png",
+  "version": "1.0.0",
+  "defaultMode": "window",
+  "port": 0,
+  "documentRoot": "/",
+  "url": "/game.html",
+  "enableServer": true,
+  "enableNativeAPI": false,
+  "enableExtensions": false,
+  "modes": {
+    "window": {
+      "title": "Your Little Oyachi",
+      "width": 1280,
+      "height": 720,
+      "minWidth": 800,
+      "minHeight": 600,
+      "fullScreen": false,
+      "resizable": true,
+      "maximize": false,
+      "hidden": false,
+      "alwaysOnTop": false,
+      "borderless": false,
+      "maximizeAfterResize": false,
+      "useMetadata": true
+    }
+  },
+  "cli": {
+    "binaryName": "your-little-oyachi",
+    "resourcesPath": "/desktop-resources/",
+    "binaryVersion": "6.8.0"
+  },
+  "buildScript": {
+    "win": {
+      "architecture": [
+        "x64"
+      ],
+      "appName": "Your Little Oyachi"
+    },
+    "mac": {
+      "architecture": [
+        "x64",
+        "arm64",
+        "universal"
+      ],
+      "minimumOS": "10.13.0",
+      "appName": "Your Little Oyachi",
+      "appBundleName": "Your Little Oyachi",
+      "appIdentifier": "com.oyachi.yourlittleoyachi"
+    },
+    "linux": {
+      "architecture": [
+        "x64",
+        "arm64",
+        "armhf"
+      ],
+      "appName": "Your Little Oyachi"
+    }
+  }
+}

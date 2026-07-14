@@ -1,0 +1,17 @@
+{
+  "name": "your-little-oyachi",
+  "private": true,
+  "version": "1.0.0",
+  "scripts": {
+    "neutralino:prepare": "node tools/prepare-neutralino.mjs",
+    "neutralino:update": "neu update",
+    "neutralino:build": "npm run neutralino:prepare && neu build --release --clean"
+  },
+  "devDependencies": {
+    "@neutralinojs/neu": "latest"
+  },
+  "dependencies": {
+    "@neutralinojs/lib": "latest",
+    "pixi.js": "7.3.2"
+  }
+}

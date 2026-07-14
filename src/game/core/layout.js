@@ -65,6 +65,8 @@ export const applyLayoutMode = () => {
   }
   const containerWidth = Math.max(1, gameRoot.clientWidth || GAME_WIDTH);
   const containerHeight = Math.max(1, gameRoot.clientHeight || GAME_HEIGHT);
+  // Preserve the game's 16:9 ratio. Any remaining viewport space is filled by
+  // the matching pink page background rather than stretching or cropping the game.
   const scale = Math.max(
     0.1,
     Math.min(containerWidth / GAME_WIDTH, containerHeight / GAME_HEIGHT),

@@ -17,6 +17,15 @@ desktop.ini
 tools/*.local.*
 tools/*.bak
 
+# Neutralino generated files
+dist/
+resources.neu
+neutralinojs/
+desktop-resources/
+bin/
+node_modules/
+neutralinojs.log
+
 # Temporary files
 *.tmp
 *.temp
