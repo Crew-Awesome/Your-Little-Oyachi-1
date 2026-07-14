@@ -276,7 +276,7 @@ const initGame = ({ textures, gameRoot }) => {
 
   const hintPreferences = loadHintPreferences();
   let hintsSeen = hintPreferences.seen;
-  let hintsEnabled = hintPreferences.enabled;
+  let hintsEnabled = false;
 
   const hintOverlay = new PIXI.Container();
   hintOverlay.zIndex = 45;
@@ -459,7 +459,7 @@ const initGame = ({ textures, gameRoot }) => {
   let hintToggleRow = null;
 
   const setHintsEnabled = (enabled, { persist = true } = {}) => {
-    hintsEnabled = Boolean(enabled);
+    hintsEnabled = false;
     if (persist) {
       localStorage.setItem(hintStorageKeys.enabled, String(hintsEnabled));
     }
@@ -797,7 +797,6 @@ const initGame = ({ textures, gameRoot }) => {
 
   const settingsTabs = [
     { id: "audio", labelKey: "settings.audio" },
-    { id: "hints", labelKey: "settings.hints" },
     { id: "other", labelKey: "settings.other" },
   ];
 

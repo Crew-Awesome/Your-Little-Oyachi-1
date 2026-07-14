@@ -26,6 +26,10 @@ bin/
 node_modules/
 neutralinojs.log
 
+# Local static-site preview output
+_site/
+.tmp/
+
 # Temporary files
 *.tmp
 *.temp

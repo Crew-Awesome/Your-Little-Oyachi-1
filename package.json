@@ -3,15 +3,16 @@
   "private": true,
   "version": "1.0.0",
   "scripts": {
+    "validate": "node tools/validate-project.mjs",
     "neutralino:prepare": "node tools/prepare-neutralino.mjs",
     "neutralino:update": "neu update",
-    "neutralino:build": "npm run neutralino:prepare && neu build --release --clean"
+    "neutralino:build": "npm run validate && npm run neutralino:prepare && neu build --release --clean"
   },
   "devDependencies": {
-    "@neutralinojs/neu": "latest"
+    "@neutralinojs/neu": "11.7.2"
   },
   "dependencies": {
-    "@neutralinojs/lib": "latest",
+    "@neutralinojs/lib": "6.8.0",
     "pixi.js": "7.3.2"
   }
 }
