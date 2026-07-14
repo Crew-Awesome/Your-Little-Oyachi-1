@@ -48,27 +48,23 @@ jobs:
           cp "$output/your-little-oyachi-linux_arm64" "$packages/linux/"
           cp "$output/your-little-oyachi-linux_armhf" "$packages/linux/"
 
-          (cd "$packages/windows" && zip -q -r ../Windows-Build.zip .)
-          (cd "$packages/mac" && zip -q -r ../Mac-Build.zip .)
-          (cd "$packages/linux" && zip -q -r ../Linux-Build.zip .)
-
       - name: Upload Windows build
         uses: actions/upload-artifact@v4
         with:
           name: Windows-Build
-          path: dist/platform-builds/Windows-Build.zip
+          path: dist/platform-builds/windows
           if-no-files-found: error
 
       - name: Upload macOS build
         uses: actions/upload-artifact@v4
         with:
           name: Mac-Build
-          path: dist/platform-builds/Mac-Build.zip
+          path: dist/platform-builds/mac
           if-no-files-found: error
 
       - name: Upload Linux build
         uses: actions/upload-artifact@v4
         with:
           name: Linux-Build
-          path: dist/platform-builds/Linux-Build.zip
+          path: dist/platform-builds/linux
           if-no-files-found: error
