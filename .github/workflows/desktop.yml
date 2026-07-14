@@ -30,9 +30,45 @@ jobs:
       - name: Build Windows, macOS, and Linux releases
         run: npm run neutralino:build
 
-      - name: Upload desktop artifacts
+      - name: Package platform-specific builds
+        shell: bash
+        run: |
+          output="dist/your-little-oyachi"
+          packages="dist/platform-builds"
+          mkdir -p "$packages/windows" "$packages/mac" "$packages/linux"
+
+          cp "$output/resources.neu" "$packages/windows/"
+          cp "$output/your-little-oyachi-win_x64.exe" "$packages/windows/"
+          cp "$output/resources.neu" "$packages/mac/"
+          cp "$output/your-little-oyachi-mac_x64" "$packages/mac/"
+          cp "$output/your-little-oyachi-mac_arm64" "$packages/mac/"
+          cp "$output/your-little-oyachi-mac_universal" "$packages/mac/"
+          cp "$output/resources.neu" "$packages/linux/"
+          cp "$output/your-little-oyachi-linux_x64" "$packages/linux/"
+          cp "$output/your-little-oyachi-linux_arm64" "$packages/linux/"
+          cp "$output/your-little-oyachi-linux_armhf" "$packages/linux/"
+
+          (cd "$packages/windows" && zip -q -r ../Windows-Build.zip .)
+          (cd "$packages/mac" && zip -q -r ../Mac-Build.zip .)
+          (cd "$packages/linux" && zip -q -r ../Linux-Build.zip .)
+
+      - name: Upload Windows build
         uses: actions/upload-artifact@v4
         with:
-          name: your-little-oyachi-desktop
-          path: dist/**/*.zip
+          name: Windows-Build
+          path: dist/platform-builds/Windows-Build.zip
+          if-no-files-found: error
+
+      - name: Upload macOS build
+        uses: actions/upload-artifact@v4
+        with:
+          name: Mac-Build
+          path: dist/platform-builds/Mac-Build.zip
+          if-no-files-found: error
+
+      - name: Upload Linux build
+        uses: actions/upload-artifact@v4
+        with:
+          name: Linux-Build
+          path: dist/platform-builds/Linux-Build.zip
           if-no-files-found: error

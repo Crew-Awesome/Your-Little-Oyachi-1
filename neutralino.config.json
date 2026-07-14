@@ -6,7 +6,7 @@
   "version": "1.0.0",
   "defaultMode": "window",
   "port": 0,
-  "documentRoot": "/",
+  "documentRoot": "/desktop-resources/",
   "url": "/game.html",
   "enableServer": true,
   "enableNativeAPI": false,
@@ -14,6 +14,7 @@
   "modes": {
     "window": {
       "title": "Your Little Oyachi",
+      "icon": "/assets/site/favicon-big.png",
       "width": 1280,
       "height": 720,
       "minWidth": 800,
