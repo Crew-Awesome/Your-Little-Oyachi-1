@@ -3,7 +3,11 @@ import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
-const platform = process.env.RELEASE_PLATFORM;
+const platform = process.env.RELEASE_PLATFORM ?? {
+  win32: 'windows',
+  linux: 'linux',
+  darwin: 'macos',
+}[process.platform];
 const buildRoot = resolve(root, 'dist', 'your-little-oyachi');
 const output = resolve(root, 'dist', 'platform-build');
 const binaries = {

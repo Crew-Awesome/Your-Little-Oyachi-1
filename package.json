@@ -7,7 +7,9 @@
     "neutralino:package": "node tools/package-desktop-artifact.mjs",
     "neutralino:prepare": "node tools/prepare-neutralino.mjs",
     "neutralino:update": "neu update",
-    "neutralino:build": "npm run validate && npm run neutralino:prepare && neu build --release --clean"
+    "neutralino:build": "npm run validate && npm run neutralino:prepare && neu build --release --clean",
+    "release:package": "powershell -NoProfile -ExecutionPolicy Bypass -File tools/package-release.ps1",
+    "release:build": "npm run neutralino:build && npm run release:package"
   },
   "devDependencies": {
     "@neutralinojs/neu": "11.7.2"
