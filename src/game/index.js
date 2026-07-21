@@ -8,22 +8,6 @@ import { createLoadingScreen } from "./ui/loading-screen.js";
 import { setupStartOverlay } from "./ui/start-overlay.js";
 import { createMainScene } from "./scenes/main-scene.js";
 
-const discordRpcExtensionId = "com.oyachi.discordrpc";
-const discordSessionStartedAt = Date.now();
-
-const updateDiscordPresence = (data) => {
-  const extensions = window.Neutralino?.extensions;
-  if (!extensions?.dispatch) {
-    return;
-  }
-  extensions.dispatch(discordRpcExtensionId, "setPresence", {
-    ...data,
-    startTimestamp: discordSessionStartedAt,
-  }).catch((error) => {
-    console.error("Could not update Discord Rich Presence.", error);
-  });
-};
-
 const bootstrap = async () => {
   const gameRoot = document.getElementById("game");
   if (!gameRoot) {
@@ -34,11 +18,6 @@ const bootstrap = async () => {
   // The desktop build loads neutralino.js. Initialize it before the fullscreen
   // button attempts to use native window APIs.
   window.Neutralino?.init?.();
-  updateDiscordPresence({
-    details: "Taking care of Oyachi",
-    state: "In the room",
-  });
-
   PIXI.settings.SCALE_MODE = PIXI.SCALE_MODES.NEAREST;
   PIXI.BaseTexture.defaultOptions.scaleMode = PIXI.SCALE_MODES.NEAREST;
 

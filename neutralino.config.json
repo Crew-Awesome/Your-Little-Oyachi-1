@@ -13,15 +13,6 @@
   "nativeAllowList": [
     "window.*"
   ],
-  "enableExtensions": true,
-  "extensions": [
-    {
-      "id": "com.oyachi.discordrpc",
-      "commandWindows": "${NL_PATH}\\extensions\\discord-rpc\\bin\\windows\\oyachi-discord-rpc.exe",
-      "commandLinux": "sh ${NL_PATH}/extensions/discord-rpc/bin/linux/run.sh",
-      "commandDarwin": "sh ${NL_PATH}/extensions/discord-rpc/bin/macos/run.sh"
-    }
-  ],
   "modes": {
     "window": {
       "title": "Your Little Oyachi",

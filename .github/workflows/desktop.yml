@@ -28,7 +28,6 @@ jobs:
             label: macOS
             artifact: Mac-Build
     env:
-      DISCORD_RPC_PLATFORM: ${{ matrix.platform }}
       RELEASE_PLATFORM: ${{ matrix.platform }}
     steps:
       - name: Check out repository
@@ -39,9 +38,6 @@ jobs:
         with:
           node-version: 20
           cache: npm
-
-      - name: Set up Bun
-        uses: oven-sh/setup-bun@v2
 
       - name: Install dependencies
         run: npm ci

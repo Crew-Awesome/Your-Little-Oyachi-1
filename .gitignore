@@ -23,11 +23,6 @@ resources.neu
 neutralinojs/
 desktop-resources/
 /bin/
-/extensions/discord-rpc/bin/*
-!/extensions/discord-rpc/bin/linux/
-!/extensions/discord-rpc/bin/linux/run.sh
-!/extensions/discord-rpc/bin/macos/
-!/extensions/discord-rpc/bin/macos/run.sh
 node_modules/
 neutralinojs.log
 
