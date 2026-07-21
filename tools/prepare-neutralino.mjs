@@ -21,6 +21,7 @@ const resourcePaths = [
   'assets/toys',
   'assets/ui',
   'assets/vendor',
+  'extensions',
 ];
 
 for (const path of resourcePaths) {

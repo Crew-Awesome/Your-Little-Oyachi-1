@@ -344,10 +344,14 @@ const initGame = ({ textures, gameRoot }) => {
     scale: 1,
   };
   const updateNowPlayingLayout = (layout) => {
-    const safeInset = Math.round(32 * uiScaleState.scale);
-    nowPlayingLayout.x = layout.left + safeInset;
-    nowPlayingLayout.y = layout.bottom - safeInset;
-    nowPlayingLayout.maxWidth = Math.max(160, Math.min(360, layout.width - safeInset * 2));
+    const horizontalInset = Math.round(12 * uiScaleState.scale);
+    const bottomInset = Math.round(4 * uiScaleState.scale);
+    nowPlayingLayout.x = layout.left + horizontalInset;
+    nowPlayingLayout.y = layout.bottom - bottomInset;
+    nowPlayingLayout.maxWidth = Math.max(
+      160,
+      Math.min(360, layout.width - horizontalInset * 2),
+    );
     nowPlayingLayout.slideDistance = 12 * uiScaleState.scale;
     nowPlayingText.style.fontSize = Math.round(12 * uiScaleState.scale);
     nowPlayingText.scale.set(1);
@@ -694,8 +698,20 @@ const initGame = ({ textures, gameRoot }) => {
     hovering: false,
   };
 
-  const updateFullscreenState = () => {
-    fullscreenState.active = Boolean(document.fullscreenElement);
+  const getNativeWindowApi = () => window.Neutralino?.window;
+
+  const updateFullscreenState = async () => {
+    const nativeWindow = getNativeWindowApi();
+    if (nativeWindow?.isFullScreen) {
+      try {
+        fullscreenState.active = await nativeWindow.isFullScreen();
+      } catch (error) {
+        console.error("Could not read native fullscreen state.", error);
+        fullscreenState.active = Boolean(document.fullscreenElement);
+      }
+    } else {
+      fullscreenState.active = Boolean(document.fullscreenElement);
+    }
     fullscreenButton.icon.texture = fullscreenState.active
       ? textures.ui_fullscreen_exit
       : textures.ui_fullscreen_enter;
@@ -704,7 +720,21 @@ const initGame = ({ textures, gameRoot }) => {
     }
   };
 
-  const toggleFullscreen = () => {
+  const toggleFullscreen = async () => {
+    const nativeWindow = getNativeWindowApi();
+    if (nativeWindow?.setFullScreen && nativeWindow?.exitFullScreen) {
+      try {
+        if (await nativeWindow.isFullScreen()) {
+          await nativeWindow.exitFullScreen();
+        } else {
+          await nativeWindow.setFullScreen();
+        }
+        await updateFullscreenState();
+        return;
+      } catch (error) {
+        console.error("Native fullscreen toggle failed.", error);
+      }
+    }
     if (document.fullscreenElement) {
       document.exitFullscreen?.().catch((error) => {
         console.error("Exit fullscreen failed.", error);
@@ -722,8 +752,8 @@ const initGame = ({ textures, gameRoot }) => {
   updateFullscreenState();
 
   fullscreenButton.container.on("pointerdown", (event) => {
-    toggleFullscreen();
     event.stopPropagation();
+    void toggleFullscreen();
   });
   fullscreenButton.container.on("pointerenter", () => {
     fullscreenState.hovering = true;
@@ -2458,12 +2488,15 @@ const initGame = ({ textures, gameRoot }) => {
     const safeTop = top + maxHalfHeight + 6;
     const safeBottom = bottom - maxHalfHeight - 6;
     const cornerPadding = 32 * marginScale;
-    const gearMargin = cornerPadding;
-    settingsButton.container.x = Math.round(clamp(left + gearMargin, safeLeft, safeRight));
-    settingsButton.container.y = Math.round(clamp(top + gearMargin, safeTop, safeBottom));
-    const fullscreenMargin = cornerPadding;
-    fullscreenButton.container.x = Math.round(clamp(right - fullscreenMargin, safeLeft, safeRight));
-    fullscreenButton.container.y = Math.round(clamp(top + fullscreenMargin, safeTop, safeBottom));
+    const horizontalCornerPadding = 32 * marginScale;
+    settingsButton.container.x = Math.round(
+      clamp(left + horizontalCornerPadding, safeLeft, safeRight),
+    );
+    settingsButton.container.y = Math.round(clamp(top + cornerPadding, safeTop, safeBottom));
+    fullscreenButton.container.x = Math.round(
+      clamp(right - horizontalCornerPadding, safeLeft, safeRight),
+    );
+    fullscreenButton.container.y = Math.round(clamp(top + cornerPadding, safeTop, safeBottom));
     const baseMenuWidth = uiScaleState.menuWidth;
     const menuScale = clamp(0.9 / scale, 1, 1.35);
     optionsMenu.scale.set(menuScale);
@@ -3916,7 +3949,7 @@ const initGame = ({ textures, gameRoot }) => {
       state.current === "happy_jump_sequence";
     const bopStrength = bopActive ? clamp(Math.abs(hopHeight) / 16, 0, 1) : 0;
     const bopOffsetTarget = -bopStrength * 2;
-    const bopSquashTarget = bopStrength * 0.03;
+    const bopSquashTarget = bopStrength * (zoomiesState.active ? 0.06 : 0.03);
     bopState.offset += (bopOffsetTarget - bopState.offset) * 0.18;
     bopState.squash += (bopSquashTarget - bopState.squash) * 0.18;
 
