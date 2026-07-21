@@ -4,6 +4,15 @@ import { fileURLToPath } from 'node:url';
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const destination = resolve(root, 'desktop-resources');
+const rpcPlatform = process.env.DISCORD_RPC_PLATFORM ?? {
+  win32: 'windows',
+  linux: 'linux',
+  darwin: 'macos',
+}[process.platform];
+
+if (!rpcPlatform) {
+  throw new Error(`Unsupported Discord RPC packaging platform: ${process.platform}`);
+}
 
 await rm(destination, { recursive: true, force: true });
 await mkdir(destination, { recursive: true });
@@ -21,12 +30,17 @@ const resourcePaths = [
   'assets/toys',
   'assets/ui',
   'assets/vendor',
-  'extensions',
 ];
 
 for (const path of resourcePaths) {
   await cp(resolve(root, path), resolve(destination, path), { recursive: true });
 }
+
+await cp(
+  resolve(root, 'extensions', 'discord-rpc', 'bin', rpcPlatform),
+  resolve(destination, 'extensions', 'discord-rpc', 'bin', rpcPlatform),
+  { recursive: true },
+);
 
 const desktopGamePath = resolve(destination, 'game.html');
 const desktopGame = await readFile(desktopGamePath, 'utf8');

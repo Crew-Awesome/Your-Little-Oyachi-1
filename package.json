@@ -5,6 +5,7 @@
   "scripts": {
     "validate": "node tools/validate-project.mjs",
     "discord-rpc:build": "bun tools/build-discord-rpc.mjs",
+    "neutralino:package": "node tools/package-desktop-artifact.mjs",
     "neutralino:prepare": "npm run discord-rpc:build && node tools/prepare-neutralino.mjs",
     "neutralino:update": "neu update",
     "neutralino:build": "npm run validate && npm run neutralino:prepare && neu build --release --clean"
